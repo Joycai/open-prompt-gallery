@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
@@ -12,6 +13,7 @@ export default async function GroupPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
+  const t = await getTranslations();
   const { id } = await params;
   const page = Math.max(
     1,
@@ -29,18 +31,20 @@ export default async function GroupPage({
       <div className="detail-toolbar glass">
         <Link href="/groups" className="back-link">
           <ArrowLeft size={17} />
-          Groups
+          {t("Groups")}
         </Link>
         <div className="toolbar-actions">
           <Link className="button" href={"/groups/" + id + "/edit"}>
             <Pencil size={16} />
-            Edit group
+            {t("Edit group")}
           </Link>
           <DeleteButton kind="group" id={id} name={g.name} />
         </div>
       </div>
       <header className="detail-heading">
-        <div className="eyebrow">COLLECTION · {g.count} PROMPTS</div>
+        <div className="eyebrow">
+          {t("COLLECTION · {count} PROMPTS", { count: g.count })}
+        </div>
         <h1>{g.name}</h1>
         <p>{g.description}</p>
       </header>
@@ -48,9 +52,9 @@ export default async function GroupPage({
         <ImageGallery owner="group" id={id} images={images} title={g.name} />
       </div>
       <div className="section-heading">
-        <h2>In this group</h2>
+        <h2>{t("In this group")}</h2>
         <Link className="text-button" href={"/groups/" + id + "/edit"}>
-          Manage prompts
+          {t("Manage prompts")}
         </Link>
       </div>
       {prompts.length ? (
@@ -61,17 +65,17 @@ export default async function GroupPage({
         </div>
       ) : (
         <div className="empty-state compact">
-          <h2>Your collection is ready.</h2>
-          <p>Edit the group to add prompts from your library.</p>
+          <h2>{t("Your collection is ready.")}</h2>
+          <p>{t("Edit the group to add prompts from your library.")}</p>
         </div>
       )}
-      <nav className="pagination" aria-label="Pagination">
+      <nav className="pagination" aria-label={t("Pagination")}>
         {page > 1 && (
           <Link
             className="button"
             href={"/groups/" + id + "?page=" + (page - 1)}
           >
-            Previous
+            {t("Previous")}
           </Link>
         )}
         {prompts.length > 24 && (
@@ -79,7 +83,7 @@ export default async function GroupPage({
             className="button"
             href={"/groups/" + id + "?page=" + (page + 1)}
           >
-            Next
+            {t("Next")}
           </Link>
         )}
       </nav>

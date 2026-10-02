@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/preferences";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { useTransition } from "react";
@@ -7,6 +8,7 @@ export function Filters({
 }: {
   tags: { name: string; normalized: string }[];
 }) {
+  const t = useTranslations();
   const router = useRouter(),
     params = useSearchParams(),
     [pending, start] = useTransition();
@@ -40,9 +42,9 @@ export function Filters({
         >
           <Search size={18} />
           <input
-            aria-label="Search prompts"
+            aria-label={t("Search prompts")}
             name="q"
-            placeholder="Search titles, prompts, tags…"
+            placeholder={t("Search titles, prompts, tags…")}
             defaultValue={params.get("q") || ""}
             key={params.get("q")}
           />
@@ -50,21 +52,21 @@ export function Filters({
             <button
               type="button"
               className="icon-button"
-              aria-label="Clear search"
+              aria-label={t("Clear search")}
               onClick={() => update("q", "")}
             >
               <X size={15} />
             </button>
           )}
           <button type="submit" className="search-submit">
-            Search
+            {t("Search")}
           </button>
         </form>
-        <div className="segments" aria-label="Prompt type">
+        <div className="segments" aria-label={t("Prompt type")}>
           {[
-            ["", "All"],
-            ["full", "Full prompts"],
-            ["piece", "Pieces"],
+            ["", t("All")],
+            ["full", t("Full prompts")],
+            ["piece", t("Pieces")],
           ].map(([v, label]) => (
             <button
               key={v}
@@ -79,7 +81,7 @@ export function Filters({
       </div>
       {tags.length > 0 && (
         <div className="filter-tags">
-          <span className="filter-label">Tags</span>
+          <span className="filter-label">{t("Tags")}</span>
           <button
             className={"tag filter-tag " + (!selected.length ? "active" : "")}
             onClick={() => {
@@ -89,7 +91,7 @@ export function Filters({
               start(() => router.push("/?" + n));
             }}
           >
-            All tags
+            {t("All tags")}
           </button>
           {tags.map((t) => (
             <button
@@ -105,7 +107,7 @@ export function Filters({
             </button>
           ))}
           {selected.length > 1 && (
-            <small className="muted">Matching all selected tags</small>
+            <small className="muted">{t("Matching all selected tags")}</small>
           )}
         </div>
       )}

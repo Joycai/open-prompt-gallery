@@ -1,9 +1,12 @@
 "use client";
+import { useLocale, useTranslations } from "@/components/preferences";
+import { translateFeedback } from "@/lib/i18n";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Copy, Check, Trash2, X } from "lucide-react";
 import { deleteItem } from "@/lib/actions";
 export function CopyButton({ body }: { body: string }) {
+  const t = useTranslations();
   const [status, setStatus] = useState("");
   return (
     <div>
@@ -12,20 +15,20 @@ export function CopyButton({ body }: { body: string }) {
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(body);
-            setStatus("Copied to clipboard");
+            setStatus(t("Copied to clipboard"));
           } catch {
             setStatus(
-              "Copy unavailable. Select the text and copy it manually.",
+              t("Copy unavailable. Select the text and copy it manually."),
             );
           }
         }}
       >
-        {status === "Copied to clipboard" ? (
+        {status === t("Copied to clipboard") ? (
           <Check size={17} />
         ) : (
           <Copy size={17} />
         )}
-        Copy prompt
+        {t("Copy prompt")}
       </button>
       {status && (
         <small className="copy-status" role="status">
@@ -44,6 +47,8 @@ export function DeleteButton({
   id: string;
   name: string;
 }) {
+  const t = useTranslations();
+  const locale = useLocale();
   const ref = useRef<HTMLDialogElement>(null),
     router = useRouter(),
     [pending, start] = useTransition(),
@@ -52,11 +57,11 @@ export function DeleteButton({
     <>
       <button
         className="button danger-quiet"
-        aria-label={"Delete " + name}
+        aria-label={t("Delete {name}", { name })}
         onClick={() => ref.current?.showModal()}
       >
         <Trash2 size={16} />
-        <span>Delete</span>
+        <span>{t("Delete")}</span>
       </button>
       <dialog
         ref={ref}
@@ -64,31 +69,33 @@ export function DeleteButton({
         aria-labelledby={"delete-title-" + id}
       >
         <div className="dialog-heading">
-          <h2 id={"delete-title-" + id}>Delete {kind}?</h2>
+          <h2 id={"delete-title-" + id}>
+            {t("Delete {kind}?", { kind: t(kind) })}
+          </h2>
           <button
             className="icon-button"
-            aria-label="Close"
+            aria-label={t("Close")}
             onClick={() => ref.current?.close()}
           >
             <X size={20} />
           </button>
         </div>
         <p>
-          “{name}” will be permanently removed.
+          {t("“{name}” will be permanently removed.", { name })}
           {kind === "group"
-            ? " Its prompts will stay in your library."
+            ? t(" Its prompts will stay in your library.")
             : kind === "prompt"
-              ? " Its preview images will also be removed."
-              : " Models with prompts cannot be deleted."}
+              ? t(" Its preview images will also be removed.")
+              : t(" Models with prompts cannot be deleted.")}
         </p>
         {error && (
           <p className="error-message" role="alert">
-            {error}
+            {translateFeedback(locale, error)}
           </p>
         )}
         <div className="form-actions">
           <button className="button" onClick={() => ref.current?.close()}>
-            Keep {kind}
+            {t("Keep {kind}", { kind: t(kind) })}
           </button>
           <button
             className="button danger"
@@ -111,7 +118,7 @@ export function DeleteButton({
               })
             }
           >
-            {pending ? "Deleting…" : "Delete " + kind}
+            {pending ? t("Deleting…") : t("Delete {name}", { name: t(kind) })}
           </button>
         </div>
       </dialog>

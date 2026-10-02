@@ -1,4 +1,6 @@
 "use client";
+import { useLocale, useTranslations } from "@/components/preferences";
+import { translateFeedback } from "@/lib/i18n";
 import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
@@ -10,9 +12,10 @@ import {
 } from "@/lib/actions";
 import type { Model, Group, Prompt } from "@/lib/data";
 function Feedback({ error }: { error?: string }) {
+  const locale = useLocale();
   return error ? (
     <p className="error-message" role="alert">
-      {error}
+      {translateFeedback(locale, error)}
     </p>
   ) : null;
 }
@@ -29,25 +32,26 @@ export function PromptForm({
   selectedGroups?: string[];
   defaultModel?: string;
 }) {
+  const t = useTranslations();
   const [state, action, pending] = useActionState(savePrompt, {});
   return (
     <form action={action} className="editor-form">
       <input type="hidden" name="id" value={prompt?.id || ""} />
       <div className="form-section">
         <label>
-          Title
+          {t("Title")}
           <input
             name="title"
             required
             maxLength={160}
             defaultValue={prompt?.title}
-            placeholder="Give your idea a name"
+            placeholder={t("Give your idea a name")}
             autoFocus
           />
         </label>
         <div className="form-row">
           <label>
-            Model
+            {t("Model")}
             <select
               name="model_id"
               required
@@ -61,15 +65,15 @@ export function PromptForm({
             </select>
           </label>
           <label>
-            Prompt type
+            {t("Prompt type")}
             <select name="kind" defaultValue={prompt?.kind || "full"}>
-              <option value="full">Full prompt</option>
-              <option value="piece">Reusable piece</option>
+              <option value="full">{t("Full prompt")}</option>
+              <option value="piece">{t("Reusable piece")}</option>
             </select>
           </label>
         </div>
         <label>
-          Prompt
+          {t("Prompt")}
           <textarea
             className="prompt-input"
             name="body"
@@ -77,25 +81,28 @@ export function PromptForm({
             maxLength={50000}
             rows={10}
             defaultValue={prompt?.body}
-            placeholder="Describe your vision. Or save a detail worth reusing…"
+            placeholder={t(
+              "Describe your vision. Or save a detail worth reusing…",
+            )}
           />
         </label>
         <label>
-          Tags
+          {t("Tags")}
           <input
             name="tags"
             maxLength={2000}
             defaultValue={prompt?.tags.join(", ")}
-            placeholder="Portrait, warm light, editorial"
+            placeholder={t("Portrait, warm light, editorial")}
           />
           <small>
-            Separate tags with commas. Select tags in the library to find this
-            prompt.
+            {t(
+              "Separate tags with commas. Select tags in the library to find this prompt.",
+            )}
           </small>
         </label>
       </div>
       <fieldset className="form-section">
-        <legend>Groups</legend>
+        <legend>{t("Groups")}</legend>
         {groups.length ? (
           <div className="checkbox-grid">
             {groups.map((g) => (
@@ -111,27 +118,30 @@ export function PromptForm({
             ))}
           </div>
         ) : (
-          <p className="muted">Create groups to collect related prompts.</p>
+          <p className="muted">
+            {t("Create groups to collect related prompts.")}
+          </p>
         )}
       </fieldset>
       <p className="form-note">
         {prompt
-          ? "Manage preview images on the prompt detail page."
-          : "Save your prompt first, then add preview images."}
+          ? t("Manage preview images on the prompt detail page.")
+          : t("Save your prompt first, then add preview images.")}
       </p>
       <Feedback error={state.error} />
       <div className="form-actions">
         <Link className="button" href={prompt ? "/prompts/" + prompt.id : "/"}>
-          Cancel
+          {t("Cancel")}
         </Link>
         <button className="button primary" disabled={pending}>
-          {pending ? "Saving…" : "Save prompt"}
+          {pending ? t("Saving…") : t("Save prompt")}
         </button>
       </div>
     </form>
   );
 }
 export function ModelForm({ model }: { model?: Model }) {
+  const t = useTranslations();
   const [state, action, pending] = useActionState(saveModel, {});
   const ref = useRef<HTMLFormElement>(null);
   const submitted = useRef(false);
@@ -146,26 +156,26 @@ export function ModelForm({ model }: { model?: Model }) {
     <form action={action} ref={ref} className="model-form">
       <input type="hidden" name="id" value={model?.id || ""} />
       <label>
-        Model name
+        {t("Model name")}
         <input
           name="name"
           required
           maxLength={80}
           defaultValue={model?.name}
-          placeholder="e.g. GPT-image"
+          placeholder={t("e.g. GPT-image")}
         />
       </label>
       <label>
-        Description
+        {t("Description")}
         <input
           name="description"
           maxLength={1000}
           defaultValue={model?.description}
-          placeholder="Optional description"
+          placeholder={t("Optional description")}
         />
       </label>
       <button className="button primary" disabled={pending}>
-        {pending ? "Saving…" : model ? "Save changes" : "Add model"}
+        {pending ? t("Saving…") : model ? t("Save changes") : t("Add model")}
       </button>
       <Feedback error={state.error} />
     </form>
@@ -180,36 +190,39 @@ export function GroupForm({
   prompts: { id: string; title: string; model_name: string }[];
   selected?: string[];
 }) {
+  const t = useTranslations();
   const [state, action, pending] = useActionState(saveGroup, {});
   return (
     <form action={action} className="editor-form">
       <input type="hidden" name="id" value={group?.id || ""} />
       <div className="form-section">
         <label>
-          Group name
+          {t("Group name")}
           <input
             name="name"
             required
             maxLength={160}
             defaultValue={group?.name}
-            placeholder="e.g. Soft summer light"
+            placeholder={t("e.g. Soft summer light")}
             autoFocus
           />
         </label>
         <label>
-          Description
+          {t("Description")}
           <textarea
             name="description"
             maxLength={5000}
             rows={3}
             defaultValue={group?.description}
-            placeholder="What brings these ideas together?"
+            placeholder={t("What brings these ideas together?")}
           />
         </label>
       </div>
       <fieldset className="form-section">
-        <legend>Prompts in this group</legend>
-        <p className="muted">Collect full prompts and pieces from any model.</p>
+        <legend>{t("Prompts in this group")}</legend>
+        <p className="muted">
+          {t("Collect full prompts and pieces from any model.")}
+        </p>
         <div className="membership-list">
           {prompts.map((p) => (
             <label className="check-label" key={p.id}>
@@ -226,12 +239,14 @@ export function GroupForm({
             </label>
           ))}
           {!prompts.length && (
-            <p className="muted">No prompts yet. You can add them later.</p>
+            <p className="muted">
+              {t("No prompts yet. You can add them later.")}
+            </p>
           )}
         </div>
       </fieldset>
       <p className="form-note">
-        Add this group’s own preview images after saving.
+        {t("Add this group’s own preview images after saving.")}
       </p>
       <Feedback error={state.error} />
       <div className="form-actions">
@@ -239,21 +254,22 @@ export function GroupForm({
           className="button"
           href={group ? "/groups/" + group.id : "/groups"}
         >
-          Cancel
+          {t("Cancel")}
         </Link>
         <button className="button primary" disabled={pending}>
-          {pending ? "Saving…" : "Save group"}
+          {pending ? t("Saving…") : t("Save group")}
         </button>
       </div>
     </form>
   );
 }
 export function LoginForm() {
+  const t = useTranslations();
   const [state, action, pending] = useActionState(login, {});
   return (
     <form action={action}>
       <label>
-        Admin password
+        {t("Admin password")}
         <input
           type="password"
           name="password"
@@ -264,22 +280,23 @@ export function LoginForm() {
       </label>
       <Feedback error={state.error} />
       <button className="button primary" disabled={pending}>
-        {pending ? "Opening…" : "Open your library"}
+        {pending ? t("Opening…") : t("Open your library")}
       </button>
     </form>
   );
 }
 
 export function SetupForm() {
+  const t = useTranslations();
   const [state, action, pending] = useActionState(setupAdmin, {});
   return (
     <form action={action}>
       <label>
-        Username
+        {t("Username")}
         <input name="username" value="admin" readOnly autoComplete="username" />
       </label>
       <label>
-        Password
+        {t("Password")}
         <input
           name="password"
           type="password"
@@ -290,9 +307,9 @@ export function SetupForm() {
           autoFocus
         />
       </label>
-      <p className="form-note">Use at least 12 characters.</p>
+      <p className="form-note">{t("Use at least 12 characters.")}</p>
       <label>
-        Confirm password
+        {t("Confirm password")}
         <input
           name="confirmPassword"
           type="password"
@@ -304,7 +321,7 @@ export function SetupForm() {
       </label>
       <Feedback error={state.error} />
       <button className="button primary" disabled={pending}>
-        {pending ? "Creating account…" : "Create admin account"}
+        {pending ? t("Creating account…") : t("Create admin account")}
       </button>
     </form>
   );

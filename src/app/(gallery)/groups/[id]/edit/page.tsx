@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { GroupEditor } from "@/components/group-editor";
 export default async function EditGroup({
@@ -5,16 +6,17 @@ export default async function EditGroup({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations();
   const { id } = await params;
   return (
     <>
       <Link className="back-link" href={"/groups/" + id}>
-        ← Back to group
+        {t("← Back to group")}
       </Link>
       <header className="page-header">
         <div>
-          <h1>Edit group</h1>
-          <p>Refine your collection.</p>
+          <h1>{t("Edit group")}</h1>
+          <p>{t("Refine your collection.")}</p>
         </div>
       </header>
       <GroupEditor id={id} />

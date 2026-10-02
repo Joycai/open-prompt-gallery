@@ -10,7 +10,15 @@ A self-hosted home for full prompts, reusable prompt pieces, and visual inspirat
 - Collect prompts across models into groups. Deleting a group preserves its prompts.
 - Upload multiple independent images to prompts and groups, browse previews, select a cover, reorder, and remove images.
 - Responsive desktop/mobile navigation, keyboard focus, native confirmation dialogs, reduced motion/transparency and increased contrast support.
+- Ocean, Forest, and Violet themes, each with Light, Dark, and live OS-synced System mode.
+- English and Simplified Chinese (简体中文) interfaces, including forms, image controls, and feedback.
 - First-run setup for a persistent admin account; no external AI service or API key required.
+
+## Appearance and language
+
+Open **Settings → Appearance & language** to choose a palette, display mode, and language. Preferences are saved for one year in cookies for this browser and rendered on the server, so reloads use the same appearance and language. The default is Ocean with System mode and English. Language can also be changed on the login and setup pages. Saved prompts, titles, model names, tags, and descriptions retain their original text.
+
+Themes use semantic CSS variables and the native `light-dark()` color function (current Chrome, Edge, Firefox, and Safari). System mode responds to OS changes without a reload. To add translations, extend the typed catalog in `src/lib/i18n/zh-CN.ts` and the locale selector; interpolation placeholders must match their English source keys.
 
 ## Local development with Podman
 
