@@ -2,7 +2,7 @@
 import { useLocale, useTranslations } from "@/components/preferences";
 import { translateFeedback } from "@/lib/i18n";
 /* eslint-disable @next/next/no-img-element */
-import { useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Upload,
@@ -14,6 +14,8 @@ import {
   X,
 } from "lucide-react";
 import type { GalleryImage } from "@/lib/data";
+import { useDialogMotion } from "@/components/use-dialog-motion";
+import { usePanelMotion } from "@/components/use-panel-motion";
 import { changeImage } from "@/lib/actions";
 export function ImageGallery({
   images,
@@ -32,12 +34,16 @@ export function ImageGallery({
     [error, setError] = useState(""),
     [uploading, setUploading] = useState(false),
     [progress, setProgress] = useState(""),
-    [pending, start] = useTransition(),
-    [manage, setManage] = useState(false);
+    [pending, start] = useTransition();
   const dialog = useRef<HTMLDialogElement>(null),
     input = useRef<HTMLInputElement>(null),
     abort = useRef<AbortController | null>(null),
     router = useRouter();
+  const motion = useDialogMotion(dialog);
+  const managerPanel = useRef<HTMLDivElement>(null);
+  const managerTrigger = useRef<HTMLButtonElement>(null);
+  const manager = usePanelMotion(managerPanel, managerTrigger);
+  const managerId = useId();
   const current = images.find((i) => i.id === selected) || images[0];
   async function upload(files: FileList | null) {
     if (!files?.length) return;
@@ -99,7 +105,7 @@ export function ImageGallery({
         <>
           <button
             className="hero-image"
-            onClick={() => dialog.current?.showModal()}
+            onClick={(event) => motion.open(event.detail > 0)}
             aria-label={t("Open full preview")}
           >
             <img src={"/api/images/" + current.id} alt={current.alt || title} />
@@ -125,13 +131,15 @@ export function ImageGallery({
             ))}
           </div>
           <dialog
-            className="lightbox"
+            className="lightbox motion-dialog"
+            onCancel={motion.onCancel}
+            onClose={motion.onClose}
             ref={dialog}
             aria-label={t("Full image preview")}
           >
             <button
               className="icon-button lightbox-close"
-              onClick={() => dialog.current?.close()}
+              onClick={(event) => motion.close(event.detail > 0)}
               aria-label={t("Close preview")}
             >
               <X />
@@ -171,8 +179,14 @@ export function ImageGallery({
           </button>
         ) : (
           images.length > 0 && (
-            <button className="text-button" onClick={() => setManage(!manage)}>
-              {manage ? t("Done") : t("Manage images")}
+            <button
+              className="text-button"
+              ref={managerTrigger}
+              aria-expanded={manager.open}
+              aria-controls={managerId}
+              onClick={(event) => manager.toggle(event.detail > 0)}
+            >
+              {manager.open ? t("Done") : t("Manage images")}
             </button>
           )
         )}
@@ -190,8 +204,16 @@ export function ImageGallery({
           {translateFeedback(locale, error)}
         </p>
       )}
-      {manage && (
-        <div className="image-manager">
+      {manager.present && (
+        <div
+          className="image-manager"
+          id={managerId}
+          ref={managerPanel}
+          data-motion={manager.mode}
+          data-phase={manager.phase}
+          inert={!manager.open}
+          aria-hidden={!manager.open}
+        >
           {images.map((img, n) => (
             <div key={img.id} className="image-manager-row">
               <img src={"/api/images/" + img.id} alt="" />
