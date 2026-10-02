@@ -47,7 +47,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Open **http://localhost:3000** and create the admin password. Add a model in Settings, then create a prompt. No demo content is seeded. The development database listens on loopback port 5433; the app listens on loopback port 3000. `APP_ORIGIN` must exactly match the browser origin, including scheme and port, for uploads.
+Open **http://localhost:3000** and create the admin password. Add a model in Settings, then create a prompt. No demo content is seeded. The development database listens on loopback port 5433; the app listens on loopback port 3000. Uploads accept same-origin browser requests and the current request origin. Set `APP_ORIGIN` to the public browser origin, including scheme and port, for secure cookies and as a fallback when a reverse proxy changes the request address and the browser omits Fetch Metadata headers.
 
 ```sh
 npm run lint

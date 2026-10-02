@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import { authenticated } from "@/lib/auth";
 import { storeImage } from "@/lib/storage";
 import { uuid } from "@/lib/validation";
+import { hasValidRequestOrigin } from "@/lib/request-origin";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   if (!(await authenticated()))
     return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const origin = request.headers.get("origin");
-  const expected = process.env.APP_ORIGIN || new URL(request.url).origin;
-  if (!origin || origin !== expected)
+  if (!hasValidRequestOrigin(request))
     return NextResponse.json(
       { error: "Invalid request origin." },
       { status: 403 },
