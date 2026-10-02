@@ -1,6 +1,5 @@
 import { Box, Plus, LogOut } from "lucide-react";
 import { getModels } from "@/lib/data";
-import { authEnabled } from "@/lib/auth";
 import { logout } from "@/lib/actions";
 import { ModelForm } from "@/components/forms";
 import { DeleteButton } from "@/components/detail-controls";
@@ -14,14 +13,12 @@ export default async function Settings() {
           <h1>Settings</h1>
           <p>A little organization goes a long way.</p>
         </div>
-        {authEnabled() && (
-          <form action={logout}>
-            <button className="button">
-              <LogOut size={16} />
-              Sign out
-            </button>
-          </form>
-        )}
+        <form action={logout}>
+          <button className="button">
+            <LogOut size={16} />
+            Sign out
+          </button>
+        </form>
       </header>
       <div className="settings-content">
         <section className="surface">

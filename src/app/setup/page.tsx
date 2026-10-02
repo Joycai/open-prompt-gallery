@@ -1,21 +1,22 @@
 import { Sparkles } from "lucide-react";
-import { LoginForm } from "@/components/forms";
+import { SetupForm } from "@/components/forms";
 import { getAdmin } from "@/lib/account";
-import { authenticated } from "@/lib/auth";
 import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
-export default async function Login() {
-  if (!(await getAdmin())) redirect("/setup");
-  if (await authenticated()) redirect("/");
+export default async function Setup() {
+  if (await getAdmin()) redirect("/login");
   return (
     <main className="login-page">
       <div className="login-card glass">
         <span className="brand-mark">
           <Sparkles size={26} />
         </span>
-        <h1>Your ideas await.</h1>
-        <p className="muted">Sign in as admin.</p>
-        <LoginForm />
+        <h1>Make this library yours.</h1>
+        <p className="muted">
+          Create your admin password to get started. Your account stays with
+          your library when you upgrade.
+        </p>
+        <SetupForm />
       </div>
     </main>
   );
