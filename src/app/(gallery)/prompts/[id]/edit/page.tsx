@@ -1,7 +1,13 @@
 import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getModels, getGroups, getPrompt, getMemberships } from "@/lib/data";
+import {
+  getModels,
+  getGroups,
+  getPrompt,
+  getMemberships,
+  getTags,
+} from "@/lib/data";
 import { PromptForm } from "@/components/forms";
 export default async function EditPrompt({
   params,
@@ -10,11 +16,12 @@ export default async function EditPrompt({
 }) {
   const t = await getTranslations();
   const { id } = await params;
-  const [models, groups, prompt, membership] = await Promise.all([
+  const [models, groups, prompt, membership, tags] = await Promise.all([
     getModels(),
     getGroups(),
     getPrompt(id),
     getMemberships(id),
+    getTags(),
   ]);
   if (!prompt) notFound();
   return (
@@ -32,6 +39,7 @@ export default async function EditPrompt({
         models={models}
         groups={groups}
         prompt={prompt}
+        existingTags={tags.map((tag) => tag.name)}
         selectedGroups={membership.map((g) => g.id)}
       />
     </>

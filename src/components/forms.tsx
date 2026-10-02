@@ -10,6 +10,7 @@ import {
   login,
   setupAdmin,
 } from "@/lib/actions";
+import { TagInput } from "@/components/tag-input";
 import type { Model, Group, Prompt } from "@/lib/data";
 function Feedback({ error }: { error?: string }) {
   const locale = useLocale();
@@ -25,14 +26,19 @@ export function PromptForm({
   prompt,
   selectedGroups = [],
   defaultModel,
+  initialValues,
+  existingTags = [],
 }: {
   models: Model[];
   groups: Group[];
   prompt?: Prompt;
   selectedGroups?: string[];
   defaultModel?: string;
+  initialValues?: Pick<Prompt, "title" | "body" | "model_id" | "kind" | "tags">;
+  existingTags?: string[];
 }) {
   const t = useTranslations();
+  const values = prompt ?? initialValues;
   const [state, action, pending] = useActionState(savePrompt, {});
   return (
     <form action={action} className="editor-form">
@@ -44,7 +50,7 @@ export function PromptForm({
             name="title"
             required
             maxLength={160}
-            defaultValue={prompt?.title}
+            defaultValue={values?.title}
             placeholder={t("Give your idea a name")}
             autoFocus
           />
@@ -55,7 +61,7 @@ export function PromptForm({
             <select
               name="model_id"
               required
-              defaultValue={prompt?.model_id || defaultModel || models[0]?.id}
+              defaultValue={values?.model_id || defaultModel || models[0]?.id}
             >
               {models.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -66,7 +72,7 @@ export function PromptForm({
           </label>
           <label>
             {t("Prompt type")}
-            <select name="kind" defaultValue={prompt?.kind || "full"}>
+            <select name="kind" defaultValue={values?.kind || "full"}>
               <option value="full">{t("Full prompt")}</option>
               <option value="piece">{t("Reusable piece")}</option>
             </select>
@@ -76,23 +82,23 @@ export function PromptForm({
           {t("Prompt")}
           <textarea
             className="prompt-input"
+            aria-label={t("Prompt")}
             name="body"
             required
             maxLength={50000}
             rows={10}
-            defaultValue={prompt?.body}
+            defaultValue={values?.body}
             placeholder={t(
               "Describe your vision. Or save a detail worth reusing…",
             )}
           />
         </label>
+        <small>{t("Markdown formatting is supported.")}</small>
         <label>
           {t("Tags")}
-          <input
-            name="tags"
-            maxLength={2000}
-            defaultValue={prompt?.tags.join(", ")}
-            placeholder={t("Portrait, warm light, editorial")}
+          <TagInput
+            defaultValue={values?.tags.join(", ")}
+            tags={existingTags}
           />
           <small>
             {t(

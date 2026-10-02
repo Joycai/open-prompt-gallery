@@ -1,9 +1,10 @@
 import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil, Layers } from "lucide-react";
+import { ArrowLeft, Pencil, Layers, CopyPlus } from "lucide-react";
 import { getPrompt, getImages, getMemberships } from "@/lib/data";
 import { CopyButton, DeleteButton } from "@/components/detail-controls";
+import { PromptMarkdown } from "@/components/prompt-markdown";
 import { ImageGallery } from "@/components/image-gallery";
 export default async function PromptPage({
   params,
@@ -30,6 +31,10 @@ export default async function PromptPage({
           {t("All prompts")}
         </Link>
         <div className="toolbar-actions">
+          <Link className="button" href={"/prompts/new?copy=" + id}>
+            <CopyPlus size={16} />
+            {t("Create a copy")}
+          </Link>
           <Link className="button" href={"/prompts/" + id + "/edit"}>
             <Pencil size={16} />
             {t("Edit prompt")}
@@ -53,7 +58,7 @@ export default async function PromptPage({
               {t("{count} characters", { count: p.body.length })}
             </span>
           </div>
-          <div className="prompt-body">{p.body}</div>
+          <PromptMarkdown body={p.body} />
           <CopyButton body={p.body} />
           <div className="detail-section">
             <h3>{t("Tags")}</h3>
