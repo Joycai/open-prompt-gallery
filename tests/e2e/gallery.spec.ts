@@ -4,6 +4,72 @@ const suffix = Date.now().toString();
 const model = "Test model " + suffix,
   prompt = "Warm studio " + suffix,
   group = "Portrait studies " + suffix;
+async function checkGalleryLayout(page: Page) {
+  const cards = page.locator(".gallery-cards");
+  const columns = page.getByRole("combobox", { name: "Items per row" });
+  await page.setViewportSize({ width: 1800, height: 1000 });
+  await expect(page.getByRole("button", { name: "Grid view" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.locator(".card-preview img").first()).toHaveCSS(
+    "object-fit",
+    "contain",
+  );
+  for (const count of [1, 2, 6]) {
+    await columns.selectOption(String(count));
+    expect(
+      await cards.evaluate(
+        (element) =>
+          getComputedStyle(element).gridTemplateColumns.split(" ").length,
+      ),
+    ).toBe(count);
+  }
+  await page.getByRole("button", { name: "List view" }).click();
+  await expect(cards).toHaveClass(/gallery-list/);
+  await expect(columns).toHaveCount(0);
+  const card = cards.locator(".prompt-card").first();
+  const previewBox = await card.locator(".card-preview").boundingBox();
+  const contentBox = await card.locator(".card-content").boundingBox();
+  expect(previewBox!.x + previewBox!.width).toBeLessThanOrEqual(contentBox!.x);
+  await page.reload();
+  await expect(page.getByRole("button", { name: "List view" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: "test-results/gallery-list-mobile.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Grid view" }).click();
+  await expect(columns).toHaveValue("6");
+  expect(
+    await cards.evaluate(
+      (element) =>
+        getComputedStyle(element).gridTemplateColumns.split(" ").length,
+    ),
+  ).toBe(1);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.setViewportSize({ width: 1800, height: 1000 });
+  await page.screenshot({
+    path: "test-results/gallery-grid-six.png",
+    fullPage: true,
+  });
+  await columns.selectOption("2");
+  await page.reload();
+  await expect(columns).toHaveValue("2");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+}
 async function checkGalleryMotion(page: Page) {
   const hero = page.getByRole("button", { name: "Open full preview" });
   const dialog = page.locator("dialog.lightbox");
@@ -201,12 +267,12 @@ test("complete persistent library workflow", async ({ page }) => {
   ).toBeVisible();
   const promptUrl = page.url();
   const red = await sharp({
-    create: { width: 800, height: 600, channels: 3, background: "#bd9470" },
+    create: { width: 400, height: 900, channels: 3, background: "#bd9470" },
   })
     .png()
     .toBuffer();
   const blue = await sharp({
-    create: { width: 800, height: 600, channels: 3, background: "#87a8c2" },
+    create: { width: 1200, height: 300, channels: 3, background: "#87a8c2" },
   })
     .png()
     .toBuffer();
@@ -261,6 +327,7 @@ test("complete persistent library workflow", async ({ page }) => {
   });
   expect(rejected.status()).toBe(400);
   await page.goto("/?q=" + encodeURIComponent(prompt));
+  await checkGalleryLayout(page);
   await page.getByRole("button", { name: "Portrait", exact: true }).click();
   await page.getByRole("button", { name: "Lighting", exact: true }).click();
   await expect(
@@ -279,6 +346,12 @@ test("complete persistent library workflow", async ({ page }) => {
     page.getByRole("heading", { name: group, exact: true }),
   ).toBeVisible();
   const groupUrl = page.url();
+  await expect(
+    page.getByRole("combobox", { name: "Items per row" }),
+  ).toHaveValue("2");
+  await page.getByRole("button", { name: "List view" }).click();
+  await expect(page.locator(".gallery-cards")).toHaveClass(/gallery-list/);
+  await page.getByRole("button", { name: "Grid view" }).click();
   await expect(
     page.getByRole("heading", { name: prompt, exact: true }),
   ).toBeVisible();

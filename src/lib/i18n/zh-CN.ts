@@ -1,5 +1,9 @@
 // English source messages are stable translation keys. Keep placeholders in sync.
 export const zhCN = {
+  "Gallery view": "图库视图",
+  "Grid view": "网格视图",
+  "List view": "列表视图",
+  "Items per row": "每行数量",
   "Create a copy": "创建副本",
   "{title} (copy)": "{title}（副本）",
   "Create a new prompt from this copy. Preview images can be added after saving.":
