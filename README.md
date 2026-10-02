@@ -55,6 +55,8 @@ The end-to-end test creates uniquely named records. If interrupted, its test rec
 
 | Variable                    | Purpose                                                                                           |
 | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| `DB_URL`                    | Container connection URL; takes precedence over `DATABASE_URL`.                                   |
+| `RUN_MIGRATIONS`            | Container startup automatically migrates; set `false` only when running migrations separately.    |
 | `DATABASE_URL`              | PostgreSQL connection URL. URL-encode credentials if needed.                                      |
 | `UPLOAD_DIR`                | Persistent image directory, relative to app working directory or absolute.                        |
 | `APP_ORIGIN`                | Exact externally visible origin, e.g. `https://prompts.example.com`.                              |
@@ -88,7 +90,9 @@ The **Package release** GitHub Actions workflow validates the code and builds pr
 
 Review the assets, then publish the draft in GitHub. No registry account or additional secret is needed; the workflow uses the repository's automatic `GITHUB_TOKEN`. Actions must be enabled and permitted to use the listed Docker/GitHub actions. Failed jobs can be rerun while the release is a draft; published release assets are never overwritten. Use a new version tag for updates. Tag versions are authoritative for image names; keep `package.json` version in sync when cutting releases.
 
-On the NAS, download the deployment bundle and the image for its CPU, verify checksums, extract the bundle, and import the image:
+**Standalone Container Manager deployment (external PostgreSQL):** import the image archive for your NAS CPU, create a container with `DB_URL`, `APP_PASSWORD`, `SESSION_SECRET`, and `APP_ORIGIN`, map NAS port 3000 to container port 3000, and mount a writable NAS folder at `/app/data/uploads`. The image automatically runs database migrations before starting the app. No Compose file is needed. See [the step-by-step Container Manager guide](deploy/README.md#option-a-container-manager-image-import--external-postgresql), including folder permissions and upgrade instructions.
+
+**Optional Compose deployment (bundled PostgreSQL):** On the NAS, download the deployment bundle and the image for its CPU, verify checksums, extract the bundle, and import the image:
 
 ```sh
 docker load -i open-prompt-gallery-v0.1.0-linux-amd64.tar.gz

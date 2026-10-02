@@ -36,6 +36,7 @@ services:
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
       ALLOW_PRIVATE_NO_AUTH: ${ALLOW_PRIVATE_NO_AUTH:-false}
       UPLOAD_DIR: /app/data/uploads
+      RUN_MIGRATIONS: "false"
     volumes:
       - uploads:/app/data/uploads
     depends_on:
@@ -44,7 +45,13 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       start_period: 20s

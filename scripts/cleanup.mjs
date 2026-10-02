@@ -1,8 +1,9 @@
 import postgres from "postgres";
 import { readdir, stat, unlink } from "node:fs/promises";
 import path from "node:path";
-if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
-const sql = postgres(process.env.DATABASE_URL, { max: 1 });
+const databaseUrl = process.env.DB_URL || process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DB_URL or DATABASE_URL is required");
+const sql = postgres(databaseUrl, { max: 1 });
 const dir = path.resolve(process.env.UPLOAD_DIR || "./data/uploads");
 function location(key) {
   if (!/^[a-f0-9-]{36}\.webp$/.test(key))

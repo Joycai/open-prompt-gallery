@@ -1,7 +1,8 @@
 import postgres from "postgres";
 import { readdir, readFile } from "node:fs/promises";
-if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
-const sql = postgres(process.env.DATABASE_URL, { max: 1 });
+const databaseUrl = process.env.DB_URL || process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DB_URL or DATABASE_URL is required");
+const sql = postgres(databaseUrl, { max: 1 });
 try {
   await sql.begin(async (tx) => {
     await tx`SELECT pg_advisory_xact_lock(731684102)`;

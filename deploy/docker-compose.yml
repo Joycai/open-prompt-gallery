@@ -36,6 +36,7 @@ services:
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
       ALLOW_PRIVATE_NO_AUTH: ${ALLOW_PRIVATE_NO_AUTH:-false}
       UPLOAD_DIR: /app/data/uploads
+      RUN_MIGRATIONS: "false"
     volumes:
       - uploads:/app/data/uploads
     depends_on:

@@ -21,4 +21,4 @@ COPY --from=dependencies /app/node_modules/postgres ./node_modules/postgres
 RUN mkdir -p /app/data/uploads && chown -R node:node /app/data
 USER node
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node", "scripts/docker-start.mjs"]

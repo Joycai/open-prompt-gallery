@@ -2,6 +2,32 @@
 
 No Node.js, npm install, or application build is needed on the NAS.
 
+## Option A: Container Manager image import + external PostgreSQL
+
+No Compose project or deployment bundle is required for this option. Download the matching `open-prompt-gallery-VERSION-linux-amd64.tar.gz` (Intel/AMD) or `linux-arm64.tar.gz` (64-bit ARM) from the release, plus `SHA256SUMS`, and verify the checksum. Import the image archive in Container Manager. If your DSM importer requires an uncompressed archive, decompress the `.gz` to a `.tar` first.
+
+1. On your separate PostgreSQL server, create a dedicated user and empty database owned by that user. PostgreSQL 17 is tested. Allow connections from the NAS/container network.
+2. Create a persistent NAS folder, for example `/volume1/docker/open-prompt-gallery/uploads`. Grant the container's UID/GID **1000:1000** read/write/traverse access to this folder (including DSM ACLs where applicable).
+3. Select the imported image and create a container. Keep its default command. Set automatic restart and map NAS port **3000** to container TCP port **3000** (choose another NAS port if occupied).
+4. Add a read/write volume mapping: NAS folder `/volume1/docker/open-prompt-gallery/uploads` → container path `/app/data/uploads`.
+5. Add these environment variables in Container Manager:
+
+| Variable         | Example / value                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| `DB_URL`         | `postgresql://gallery:YOUR_URL_ENCODED_PASSWORD@192.168.1.100:5432/gallery`                      |
+| `APP_PASSWORD`   | Your strong gallery login password                                                               |
+| `SESSION_SECRET` | At least 32 random characters; generate with `openssl rand -hex 32`                              |
+| `APP_ORIGIN`     | `http://192.168.1.100:3000` — exact URL used in your browser, or your HTTPS reverse proxy origin |
+| `UPLOAD_DIR`     | `/app/data/uploads` (already the image default)                                                  |
+
+`DB_URL` takes precedence over the existing `DATABASE_URL` name. Use a database address reachable from the container; `localhost` points to the container itself. The NAS folder is configured under **volume mappings**, not as an environment variable: `UPLOAD_DIR` always names the **container-side** path. Keep internal `PORT=3000` and `HOSTNAME=0.0.0.0` at their image defaults.
+
+Start the container, then open the configured origin and sign in. On startup it checks that the upload directory is writable, applies outstanding migrations, then starts Next.js. A migration failure prevents startup; inspect the container log and check the database address, permissions, and credentials. `RUN_MIGRATIONS=false` is optional only when migrations are run separately (as in the Compose option below).
+
+For upgrades, back up the external database and upload folder together, import a **new version** of the image, stop the old container, and create its replacement with the same environment, port and folder mappings. The new container migrates the existing database automatically. Keep the upload folder and database; do not run old and new containers together during upgrades. Previous releases made before this startup support was added need a new build/tag.
+
+## Option B: Compose with bundled PostgreSQL
+
 1. Download the deployment `.tar.gz`, `SHA256SUMS`, and **one** image archive from the same GitHub release:
    - `linux-amd64`: Intel/AMD 64-bit NAS (`uname -m` reports `x86_64`).
    - `linux-arm64`: 64-bit ARM NAS (`uname -m` reports `aarch64`).
