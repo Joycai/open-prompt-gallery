@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { Plus, Library, SearchX } from "lucide-react";
 import { getModels, getPrompts, getTags } from "@/lib/data";
@@ -9,6 +10,7 @@ export default async function LibraryPage({
 }: {
   searchParams: Promise<Params>;
 }) {
+  const t = await getTranslations();
   const p = await searchParams;
   const one = (key: string) =>
     typeof p[key] === "string" ? (p[key] as string) : "";
@@ -44,10 +46,11 @@ export default async function LibraryPage({
     <>
       <header className="page-header">
         <div>
-          <div className="eyebrow">YOUR CREATIVE LIBRARY</div>
-          <h1>{model?.name || "All prompts"}</h1>
+          <div className="eyebrow">{t("YOUR CREATIVE LIBRARY")}</div>
+          <h1>{model?.name || t("All prompts")}</h1>
           <p>
-            {model?.description || "A little inspiration. Always within reach."}
+            {model?.description ||
+              t("A little inspiration. Always within reach.")}
           </p>
         </div>
         <Link
@@ -59,18 +62,20 @@ export default async function LibraryPage({
           }
         >
           <Plus size={18} />
-          New prompt
+          {t("New prompt")}
         </Link>
       </header>
       <Filters tags={tags} />
       {prompts.length ? (
         <>
           <div className="results-caption">
-            {filtered ? "Your matching prompts" : "Saved for your next idea"}
+            {filtered
+              ? t("Your matching prompts")
+              : t("Saved for your next idea")}
             <span>
               {model
-                ? model.count + " prompts in this model"
-                : "Full prompts & reusable pieces"}
+                ? t("{count} prompts in this model", { count: model.count })
+                : t("Full prompts & reusable pieces")}
             </span>
           </div>
           <div className="card-grid">
@@ -78,16 +83,18 @@ export default async function LibraryPage({
               <PromptCard key={prompt.id} prompt={prompt} back={back} />
             ))}
           </div>
-          <nav className="pagination" aria-label="Pagination">
+          <nav className="pagination" aria-label={t("Pagination")}>
             {page > 1 && (
               <Link className="button" href={pageUrl(page - 1)}>
-                Previous
+                {t("Previous")}
               </Link>
             )}
-            {(page > 1 || prompts.length > 24) && <span>Page {page}</span>}
+            {(page > 1 || prompts.length > 24) && (
+              <span>{t("Page {page}", { page })}</span>
+            )}
             {prompts.length > 24 && (
               <Link className="button" href={pageUrl(page + 1)}>
-                Next
+                {t("Next")}
               </Link>
             )}
           </nav>
@@ -96,12 +103,16 @@ export default async function LibraryPage({
         <div className="empty-state">
           {filtered ? <SearchX size={38} /> : <Library size={38} />}
           <h2>
-            {filtered ? "No prompts found" : "Make room for your next idea."}
+            {filtered
+              ? t("No prompts found")
+              : t("Make room for your next idea.")}
           </h2>
           <p>
             {filtered
-              ? "Try another search or a different combination of tags."
-              : "Save the prompts you love, collect the details that inspire you, and find them when you need them."}
+              ? t("Try another search or a different combination of tags.")
+              : t(
+                  "Save the prompts you love, collect the details that inspire you, and find them when you need them.",
+                )}
           </p>
           <Link
             className="button primary"
@@ -114,10 +125,10 @@ export default async function LibraryPage({
             }
           >
             {filtered
-              ? "Clear filters"
+              ? t("Clear filters")
               : models.length
-                ? "Create your first prompt"
-                : "Add your first model"}
+                ? t("Create your first prompt")
+                : t("Add your first model")}
           </Link>
         </div>
       )}

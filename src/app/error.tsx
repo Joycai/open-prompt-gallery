@@ -1,15 +1,18 @@
 "use client";
+import { useTranslations } from "@/components/preferences";
 export default function RootError({ reset }: { reset: () => void }) {
+  const t = useTranslations();
   return (
     <main className="login-page">
       <section className="login-card glass">
-        <h1>The library is unavailable.</h1>
+        <h1>{t("The library is unavailable.")}</h1>
         <p>
-          Check the database connection and run pending migrations, then try
-          again.
+          {t(
+            "Check the database connection and run pending migrations, then try again.",
+          )}
         </p>
         <button className="button primary" onClick={reset}>
-          Try again
+          {t("Try again")}
         </button>
       </section>
     </main>

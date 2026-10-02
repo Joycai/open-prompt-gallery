@@ -1,14 +1,16 @@
+import { getTranslations } from "@/lib/i18n/server";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ImageIcon, TextQuote, ArrowUpRight, Layers } from "lucide-react";
 import type { Prompt, Group } from "@/lib/data";
-export function PromptCard({
+export async function PromptCard({
   prompt: p,
   back = "",
 }: {
   prompt: Prompt;
   back?: string;
 }) {
+  const t = await getTranslations();
   return (
     <Link
       href={
@@ -23,7 +25,7 @@ export function PromptCard({
           <>
             <TextQuote size={28} />
             <p>{p.body}</p>
-            <span>Words with possibility.</span>
+            <span>{t("Words with possibility.")}</span>
           </>
         )}
       </div>
@@ -35,7 +37,7 @@ export function PromptCard({
         <div className="card-meta">
           <span>{p.model_name}</span>
           <span className={"badge " + (p.kind === "piece" ? "purple" : "")}>
-            {p.kind === "piece" ? "Piece" : "Full prompt"}
+            {p.kind === "piece" ? t("Piece") : t("Full prompt")}
           </span>
         </div>
         <div className="card-bottom">
@@ -58,7 +60,8 @@ export function PromptCard({
     </Link>
   );
 }
-export function GroupCard({ group: g }: { group: Group }) {
+export async function GroupCard({ group: g }: { group: Group }) {
+  const t = await getTranslations();
   return (
     <Link href={"/groups/" + g.id} className="prompt-card">
       <div className={"card-preview " + (!g.cover ? "group-preview" : "")}>
@@ -74,10 +77,12 @@ export function GroupCard({ group: g }: { group: Group }) {
           <ArrowUpRight size={16} />
         </div>
         <p className="muted clamp-two">
-          {g.description || "A collection of ideas that belong together."}
+          {g.description || t("A collection of ideas that belong together.")}
         </p>
         <span className="badge">
-          {g.count} {g.count === 1 ? "prompt" : "prompts"}
+          {t(g.count === 1 ? "{count} prompt" : "{count} prompts", {
+            count: g.count,
+          })}
         </span>
       </div>
     </Link>

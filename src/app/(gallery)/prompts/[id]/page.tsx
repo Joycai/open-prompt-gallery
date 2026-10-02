@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Pencil, Layers } from "lucide-react";
@@ -11,6 +12,7 @@ export default async function PromptPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ back?: string }>;
 }) {
+  const t = await getTranslations();
   const { id } = await params;
   const [p, images, groups, search] = await Promise.all([
     getPrompt(id),
@@ -25,12 +27,12 @@ export default async function PromptPage({
       <div className="detail-toolbar glass">
         <Link className="back-link" href={back}>
           <ArrowLeft size={17} />
-          All prompts
+          {t("All prompts")}
         </Link>
         <div className="toolbar-actions">
           <Link className="button" href={"/prompts/" + id + "/edit"}>
             <Pencil size={16} />
-            Edit prompt
+            {t("Edit prompt")}
           </Link>
           <DeleteButton kind="prompt" id={id} name={p.title} />
         </div>
@@ -39,22 +41,22 @@ export default async function PromptPage({
         <div className="eyebrow">{p.model_name}</div>
         <h1>{p.title}</h1>
         <span className={"badge " + (p.kind === "piece" ? "purple" : "")}>
-          {p.kind === "piece" ? "Reusable piece" : "Full prompt"}
+          {p.kind === "piece" ? t("Reusable piece") : t("Full prompt")}
         </span>
       </header>
       <div className="detail-grid">
         <ImageGallery images={images} owner="prompt" id={id} title={p.title} />
         <div className="prompt-panel">
           <div className="panel-heading">
-            <h2>Prompt</h2>
+            <h2>{t("Prompt")}</h2>
             <span className="muted">
-              {p.body.length.toLocaleString()} characters
+              {t("{count} characters", { count: p.body.length })}
             </span>
           </div>
           <div className="prompt-body">{p.body}</div>
           <CopyButton body={p.body} />
           <div className="detail-section">
-            <h3>Tags</h3>
+            <h3>{t("Tags")}</h3>
             <div className="tag-list">
               {p.tags.length ? (
                 p.tags.map((t) => (
@@ -72,12 +74,12 @@ export default async function PromptPage({
                   </Link>
                 ))
               ) : (
-                <span className="muted">No tags yet.</span>
+                <span className="muted">{t("No tags yet.")}</span>
               )}
             </div>
           </div>
           <div className="detail-section">
-            <h3>In these groups</h3>
+            <h3>{t("In these groups")}</h3>
             {groups.length ? (
               groups.map((g) => (
                 <Link
@@ -90,7 +92,9 @@ export default async function PromptPage({
                 </Link>
               ))
             ) : (
-              <p className="muted">Edit this prompt to add it to a group.</p>
+              <p className="muted">
+                {t("Edit this prompt to add it to a group.")}
+              </p>
             )}
           </div>
         </div>

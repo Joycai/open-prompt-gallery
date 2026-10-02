@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/preferences";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import type { Model } from "@/lib/data";
 export function Sidebar({ models }: { models: Model[] }) {
+  const t = useTranslations();
   const path = usePathname(),
     params = useSearchParams(),
     model = params.get("model");
@@ -21,17 +23,18 @@ export function Sidebar({ models }: { models: Model[] }) {
         href="/"
       >
         <Library size={19} />
-        All prompts
+        {t("All prompts")}
       </Link>
       <Link
         className={"nav-link " + (path.startsWith("/groups") ? "selected" : "")}
         href="/groups"
       >
         <Layers size={19} />
-        Groups
+        {t("Groups")}
       </Link>
       <div className="nav-label">
-        Models <span>{models.length}</span>
+        {t("Models")}
+        <span>{models.length}</span>
       </div>
       <div className="model-nav">
         {models.map((m) => (
@@ -46,7 +49,7 @@ export function Sidebar({ models }: { models: Model[] }) {
           </Link>
         ))}
         {!models.length && (
-          <p className="nav-hint">Add your first model in Settings.</p>
+          <p className="nav-hint">{t("Add your first model in Settings.")}</p>
         )}
       </div>
       <Link
@@ -56,7 +59,7 @@ export function Sidebar({ models }: { models: Model[] }) {
         href="/settings"
       >
         <Settings size={19} />
-        Settings
+        {t("Settings")}
       </Link>
     </>
   );
@@ -70,18 +73,20 @@ export function Sidebar({ models }: { models: Model[] }) {
           Open Prompt<span className="brand-sub">Gallery</span>
         </span>
       </Link>
-      <p className="brand-caption">Your ideas, ready to reuse.</p>
-      <nav className="desktop-nav" aria-label="Main navigation">
+      <p className="brand-caption">{t("Your ideas, ready to reuse.")}</p>
+      <nav className="desktop-nav" aria-label={t("Main navigation")}>
         {nav}
       </nav>
       <details className="mobile-nav">
         <summary>
-          Browse library <ChevronDown size={16} />
+          {t("Browse library")}
+          <ChevronDown size={16} />
         </summary>
-        <nav aria-label="Mobile navigation">{nav}</nav>
+        <nav aria-label={t("Mobile navigation")}>{nav}</nav>
       </details>
       <div className="sidebar-footer">
-        <span className="status-dot" /> Your personal creative library
+        <span className="status-dot" />
+        {t("Your personal creative library")}
       </div>
     </aside>
   );

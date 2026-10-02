@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getModels, getGroups, getPrompt, getMemberships } from "@/lib/data";
@@ -7,6 +8,7 @@ export default async function EditPrompt({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations();
   const { id } = await params;
   const [models, groups, prompt, membership] = await Promise.all([
     getModels(),
@@ -18,12 +20,12 @@ export default async function EditPrompt({
   return (
     <>
       <Link className="back-link" href={"/prompts/" + id}>
-        ← Back to prompt
+        {t("← Back to prompt")}
       </Link>
       <header className="page-header">
         <div>
-          <h1>Edit prompt</h1>
-          <p>A few details can make all the difference.</p>
+          <h1>{t("Edit prompt")}</h1>
+          <p>{t("A few details can make all the difference.")}</p>
         </div>
       </header>
       <PromptForm

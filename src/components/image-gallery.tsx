@@ -1,4 +1,6 @@
 "use client";
+import { useLocale, useTranslations } from "@/components/preferences";
+import { translateFeedback } from "@/lib/i18n";
 /* eslint-disable @next/next/no-img-element */
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -24,6 +26,8 @@ export function ImageGallery({
   id: string;
   title: string;
 }) {
+  const t = useTranslations();
+  const locale = useLocale();
   const [selected, setSelected] = useState(images[0]?.id),
     [error, setError] = useState(""),
     [uploading, setUploading] = useState(false),
@@ -43,7 +47,12 @@ export function ImageGallery({
     let count = 0;
     try {
       for (const file of Array.from(files)) {
-        setProgress(`Uploading ${count + 1} of ${files.length}…`);
+        setProgress(
+          t("Uploading {current} of {total}…", {
+            current: count + 1,
+            total: files.length,
+          }),
+        );
         const data = new FormData();
         data.set("file", file);
         data.set("owner", owner);
@@ -55,15 +64,19 @@ export function ImageGallery({
         });
         if (!response.ok) {
           const body = await response.json();
-          throw new Error(body.error || "Upload failed.");
+          throw new Error(body.error || t("Upload failed."));
         }
         count++;
       }
-      setProgress(`${count} ${count === 1 ? "image" : "images"} added.`);
+      setProgress(
+        t(count === 1 ? "{count} image added." : "{count} images added.", {
+          count,
+        }),
+      );
     } catch (err) {
       setError(
         (err as Error).name === "AbortError"
-          ? "Upload cancelled. Images already uploaded are saved."
+          ? t("Upload cancelled. Images already uploaded are saved.")
           : (err as Error).message,
       );
       setProgress("");
@@ -81,13 +94,13 @@ export function ImageGallery({
     });
   }
   return (
-    <section className="gallery-section" aria-label="Preview images">
+    <section className="gallery-section" aria-label={t("Preview images")}>
       {current ? (
         <>
           <button
             className="hero-image"
             onClick={() => dialog.current?.showModal()}
-            aria-label="Open full preview"
+            aria-label={t("Open full preview")}
           >
             <img src={"/api/images/" + current.id} alt={current.alt || title} />
             <span className="image-overlay">
@@ -103,7 +116,7 @@ export function ImageGallery({
                   "thumbnail " + (img.id === current.id ? "active" : "")
                 }
                 onClick={() => setSelected(img.id)}
-                aria-label={"Preview image " + (n + 1)}
+                aria-label={t("Preview image {number}", { number: n + 1 })}
                 aria-pressed={img.id === current.id}
               >
                 <img src={"/api/images/" + img.id} alt="" />
@@ -114,12 +127,12 @@ export function ImageGallery({
           <dialog
             className="lightbox"
             ref={dialog}
-            aria-label="Full image preview"
+            aria-label={t("Full image preview")}
           >
             <button
               className="icon-button lightbox-close"
               onClick={() => dialog.current?.close()}
-              aria-label="Close preview"
+              aria-label={t("Close preview")}
             >
               <X />
             </button>
@@ -129,8 +142,8 @@ export function ImageGallery({
       ) : (
         <div className="image-empty">
           <ImagePlus size={38} />
-          <h3>A preview brings it to life.</h3>
-          <p>Add images that capture the idea.</p>
+          <h3>{t("A preview brings it to life.")}</h3>
+          <p>{t("Add images that capture the idea.")}</p>
         </div>
       )}
       <div className="gallery-actions">
@@ -150,22 +163,22 @@ export function ImageGallery({
           onClick={() => input.current?.click()}
         >
           <Upload size={16} />
-          {uploading ? "Uploading…" : "Add images"}
+          {uploading ? t("Uploading…") : t("Add images")}
         </button>
         {uploading ? (
           <button className="button" onClick={() => abort.current?.abort()}>
-            Cancel upload
+            {t("Cancel upload")}
           </button>
         ) : (
           images.length > 0 && (
             <button className="text-button" onClick={() => setManage(!manage)}>
-              {manage ? "Done" : "Manage images"}
+              {manage ? t("Done") : t("Manage images")}
             </button>
           )
         )}
       </div>
       <small className="muted">
-        JPEG, PNG, WebP or AVIF · Up to 10 MB each
+        {t("JPEG, PNG, WebP or AVIF · Up to 10 MB each")}
       </small>
       {progress && (
         <p className="muted" role="status">
@@ -174,7 +187,7 @@ export function ImageGallery({
       )}
       {error && (
         <p className="error-message" role="alert">
-          {error}
+          {translateFeedback(locale, error)}
         </p>
       )}
       {manage && (
@@ -182,11 +195,15 @@ export function ImageGallery({
           {images.map((img, n) => (
             <div key={img.id} className="image-manager-row">
               <img src={"/api/images/" + img.id} alt="" />
-              <span>{n === 0 ? "Cover" : "Image " + (n + 1)}</span>
+              <span>
+                {n === 0 ? t("Cover") : t("Image {number}", { number: n + 1 })}
+              </span>
               <button
                 className="icon-button"
-                title="Make cover"
-                aria-label={"Make image " + (n + 1) + " the cover"}
+                title={t("Make cover")}
+                aria-label={t("Make image {number} the cover", {
+                  number: n + 1,
+                })}
                 disabled={pending || n === 0}
                 onClick={() => change(img.id, "cover")}
               >
@@ -194,7 +211,7 @@ export function ImageGallery({
               </button>
               <button
                 className="icon-button"
-                aria-label={"Move image " + (n + 1) + " earlier"}
+                aria-label={t("Move image {number} earlier", { number: n + 1 })}
                 disabled={pending || n === 0}
                 onClick={() => change(img.id, "earlier")}
               >
@@ -202,7 +219,7 @@ export function ImageGallery({
               </button>
               <button
                 className="icon-button"
-                aria-label={"Move image " + (n + 1) + " later"}
+                aria-label={t("Move image {number} later", { number: n + 1 })}
                 disabled={pending || n === images.length - 1}
                 onClick={() => change(img.id, "later")}
               >
@@ -210,10 +227,10 @@ export function ImageGallery({
               </button>
               <button
                 className="icon-button danger-quiet"
-                aria-label={"Remove image " + (n + 1)}
+                aria-label={t("Remove image {number}", { number: n + 1 })}
                 disabled={pending}
                 onClick={() => {
-                  if (window.confirm("Permanently remove this image?"))
+                  if (window.confirm(t("Permanently remove this image?")))
                     change(img.id, "remove");
                 }}
               >
