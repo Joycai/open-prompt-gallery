@@ -1,6 +1,6 @@
 import { getTranslations } from "@/lib/i18n/server";
 /* eslint-disable @next/next/no-img-element */
-import Link from "next/link";
+import { CardLink } from "@/components/card-link";
 import { ImageIcon, TextQuote, ArrowUpRight, Layers } from "lucide-react";
 import type { Prompt, Group } from "@/lib/data";
 export async function PromptCard({
@@ -12,11 +12,10 @@ export async function PromptCard({
 }) {
   const t = await getTranslations();
   return (
-    <Link
+    <CardLink
       href={
         "/prompts/" + p.id + (back ? "?back=" + encodeURIComponent(back) : "")
       }
-      className="prompt-card"
     >
       <div className={"card-preview " + (!p.cover ? "text-preview" : "")}>
         {p.cover ? (
@@ -57,13 +56,13 @@ export async function PromptCard({
           </span>
         </div>
       </div>
-    </Link>
+    </CardLink>
   );
 }
 export async function GroupCard({ group: g }: { group: Group }) {
   const t = await getTranslations();
   return (
-    <Link href={"/groups/" + g.id} className="prompt-card">
+    <CardLink href={"/groups/" + g.id}>
       <div className={"card-preview " + (!g.cover ? "group-preview" : "")}>
         {g.cover ? (
           <img src={"/api/images/" + g.cover} alt={g.name} loading="lazy" />
@@ -85,6 +84,6 @@ export async function GroupCard({ group: g }: { group: Group }) {
           })}
         </span>
       </div>
-    </Link>
+    </CardLink>
   );
 }

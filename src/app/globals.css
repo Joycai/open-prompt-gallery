@@ -563,13 +563,20 @@ main {
   border-radius: 14px;
   background: var(--surface);
   overflow: hidden;
-  transition:
-    box-shadow 0.18s,
-    transform 0.18s;
+  transition: transform 0.18s;
 }
-.prompt-card:hover {
-  box-shadow: 0 8px 23px #263c5910;
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .prompt-card:hover {
+    box-shadow: 0 8px 23px #263c5910;
+    transform: translateY(-2px);
+  }
+}
+.prompt-card[data-press-motion="animated"] {
+  transition: transform 160ms var(--ease-out);
+}
+.prompt-card[data-press-motion="animated"][data-pressed="true"] {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 100ms;
 }
 .card-preview {
   aspect-ratio: 1.65;
@@ -1747,4 +1754,57 @@ input.visually-hidden {
 }
 .toolbar-actions {
   flex-wrap: wrap;
+}
+
+/* State feedback stays on the decorative layer; labels and layout settle instantly. */
+.motion-segments button {
+  position: relative;
+  isolation: isolate;
+  transform: none !important;
+  transition: none;
+}
+.motion-segments button.active {
+  background: none;
+  box-shadow: none;
+}
+.motion-segments button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--surface);
+  box-shadow: 0 1px 4px #30425a18;
+  opacity: 0;
+}
+.motion-segments button.active::before {
+  opacity: 1;
+}
+.motion-segments[data-motion="animated"] button::before {
+  transition: opacity 120ms var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-segments[data-motion="animated"] button::before {
+    opacity: 0.7;
+    box-shadow: none;
+    transition: opacity 100ms var(--ease-out) !important;
+  }
+  .motion-segments[data-motion="animated"] button.active::before {
+    opacity: 1;
+    box-shadow: 0 1px 4px #30425a18;
+  }
+  .prompt-card[data-press-motion="animated"] {
+    transform: none;
+    opacity: 1;
+    transition: opacity 100ms var(--ease-out) !important;
+  }
+  .prompt-card[data-press-motion="animated"][data-pressed="true"] {
+    transform: none;
+    opacity: 0.9;
+  }
+}
+.motion-segments[data-motion="instant"] button::before,
+.prompt-card[data-press-motion="instant"] {
+  transition: none !important;
 }

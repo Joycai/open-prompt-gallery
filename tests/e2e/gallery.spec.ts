@@ -70,6 +70,215 @@ async function checkGalleryLayout(page: Page) {
   await expect(columns).toHaveValue("2");
   await page.setViewportSize({ width: 1440, height: 1000 });
 }
+async function checkSegmentFeedback(page: Page) {
+  const returnUrl = page.url();
+  const modelHref = await page
+    .locator(".model-nav a")
+    .filter({ hasText: model })
+    .first()
+    .getAttribute("href");
+  const modelId = new URL(modelHref!, returnUrl).searchParams.get("model")!;
+  const original = returnUrl + "&model=" + modelId + "&page=2";
+  await page.goto(original);
+  const type = page.locator('.motion-segments[aria-label="Prompt type"]');
+  const full = type.getByRole("button", { name: "Full prompts", exact: true });
+  const pieces = type.getByRole("button", { name: "Pieces", exact: true });
+  const all = type.getByRole("button", { name: "All", exact: true });
+  const layerDuration = () =>
+    full.evaluate((el) => getComputedStyle(el, "::before").transitionDuration);
+  await expect(type).toHaveAttribute("data-motion", "instant");
+  expect(await layerDuration()).toBe("0s");
+  const initialQuery = new URL(original).searchParams.get("q")!;
+  await page
+    .getByRole("textbox", { name: "Search prompts" })
+    .fill(initialQuery + " draft");
+
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const requests: string[] = [];
+  const handler = async (route: import("@playwright/test").Route) => {
+    if (route.request().headers()["rsc"] === "1") {
+      requests.push(route.request().url());
+      await held;
+    }
+    await route.continue();
+  };
+  await page.route("**/*", handler);
+  try {
+    await full.click();
+    await expect(full).toHaveAttribute("aria-pressed", "true");
+    await expect(type).toHaveAttribute("data-motion", "animated");
+    expect(await layerDuration()).toBe("0.12s");
+    expect(page.url()).toBe(original);
+    await expect(page.locator(".filter-area")).toHaveClass(/pending/);
+    await expect(
+      page.getByRole("textbox", { name: "Search prompts" }),
+    ).toHaveValue(initialQuery + " draft");
+    await pieces.click();
+    await expect(pieces).toHaveAttribute("aria-pressed", "true");
+    await all.click();
+    await expect(all).toHaveAttribute("aria-pressed", "true");
+    await full.click();
+    await page.getByRole("button", { name: "Portrait", exact: true }).click();
+    await page.getByRole("button", { name: "Lighting", exact: true }).click();
+    await page
+      .getByRole("textbox", { name: "Search prompts" })
+      .fill(initialQuery);
+    await page.getByRole("button", { name: "Search", exact: true }).click();
+    await expect
+      .poll(() =>
+        requests.some((request) => {
+          const q = new URL(request).searchParams;
+          return (
+            q.get("kind") === "full" &&
+            q.getAll("tag").length === 2 &&
+            q.get("q") === initialQuery
+          );
+        }),
+      )
+      .toBe(true);
+  } finally {
+    release();
+    await page.unrouteAll({ behavior: "wait" });
+  }
+  await expect(page).toHaveURL(/kind=full/);
+  await expect(page.locator(".filter-area")).not.toHaveClass(/pending/);
+  const query = new URL(page.url()).searchParams;
+  expect(query.getAll("tag").sort()).toEqual(["lighting", "portrait"]);
+  expect(query.get("q")).toBe(initialQuery);
+  expect(query.has("page")).toBe(false);
+  expect(query.get("model")).toBe(modelId);
+  await expect(
+    page.getByRole("heading", { name: prompt, exact: true }),
+  ).toBeVisible();
+  await expect(type).toHaveAttribute("data-motion", "instant");
+  await pieces.press("Enter");
+  await expect(pieces).toHaveAttribute("aria-pressed", "true");
+  expect(await layerDuration()).toBe("0s");
+  await expect(
+    page.getByRole("heading", { name: "No prompts found" }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(full).toHaveAttribute("aria-pressed", "true");
+  expect(await layerDuration()).toBe("0s");
+  await page.goForward();
+  await expect(pieces).toHaveAttribute("aria-pressed", "true");
+  expect(await layerDuration()).toBe("0s");
+  await page.goto(returnUrl);
+
+  // A local selection lets us inspect the fade without route completion settling it.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const view = page.locator('.motion-segments[aria-label="Gallery view"]');
+  const list = view.getByRole("button", { name: "List view" });
+  await list.click();
+  expect(
+    await list.evaluate((el) => ({
+      duration: getComputedStyle(el, "::before").transitionDuration,
+      transform: getComputedStyle(el).transform,
+    })),
+  ).toEqual({ duration: "0.1s", transform: "none" });
+  await view.getByRole("button", { name: "Grid view" }).press("Space");
+  expect(
+    await list.evaluate(
+      (el) => getComputedStyle(el, "::before").transitionDuration,
+    ),
+  ).toBe("0s");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+}
+
+async function checkCardFeedback(page: Page) {
+  const card = page.locator(".prompt-card").first();
+  const box = (await card.boundingBox())!;
+  const x = box.x + box.width / 2,
+    y = box.y + 25;
+  const style = () =>
+    card.evaluate((el) => ({
+      transform: getComputedStyle(el).transform,
+      duration: getComputedStyle(el).transitionDuration,
+      property: getComputedStyle(el).transitionProperty,
+      opacity: getComputedStyle(el).opacity,
+    }));
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await expect(card).toHaveAttribute("data-pressed", "true");
+  await expect
+    .poll(async () => (await style()).transform)
+    .toBe("matrix(0.98, 0, 0, 0.98, 0, 0)");
+  expect((await style()).duration).toBe("0.1s");
+  await page.mouse.move(1, 1);
+  await expect(card).toHaveAttribute("data-pressed", "false");
+  expect((await style()).duration).toBe("0.16s");
+  await page.mouse.up();
+  await card.dispatchEvent("pointerdown", {
+    isPrimary: true,
+    button: 0,
+    pointerType: "touch",
+  });
+  await card.dispatchEvent("pointercancel", {
+    isPrimary: true,
+    pointerType: "touch",
+  });
+  await expect(card).toHaveAttribute("data-pressed", "false");
+  await card.dispatchEvent("pointerdown", { isPrimary: false, button: 0 });
+  await card.dispatchEvent("pointerdown", { isPrimary: true, button: 2 });
+  await expect(card).toHaveAttribute("data-pressed", "false");
+  await card.focus();
+  await page.keyboard.press("Shift");
+  expect((await style()).duration).toBe("0s");
+  await expect(card).toHaveAttribute("data-press-motion", "instant");
+  const href = (await card.getAttribute("href"))!;
+  const original = page.url();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new URL(href, original).href);
+  await page.goto(original);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await card.dispatchEvent("pointerdown", { isPrimary: true, button: 0 });
+  await expect.poll(async () => (await style()).opacity).toBe("0.9");
+  expect(await style()).toMatchObject({
+    transform: "none",
+    duration: "0.1s",
+    property: "opacity",
+  });
+  await card.dispatchEvent("pointerup", { isPrimary: true, button: 0 });
+  await expect.poll(async () => (await style()).opacity).toBe("1");
+  await card.focus();
+  await page.keyboard.press("Shift");
+  expect((await style()).duration).toBe("0s");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  const touch = await page
+    .context()
+    .browser()!
+    .newContext({
+      baseURL: new URL(original).origin,
+      isMobile: true,
+      hasTouch: true,
+      viewport: { width: 390, height: 844 },
+    });
+  await touch.addCookies(await page.context().cookies());
+  const mobile = await touch.newPage();
+  await mobile.goto(original);
+  const mobileCard = mobile.locator(".prompt-card").first();
+  await mobileCard.dispatchEvent("pointerenter", {
+    isPrimary: true,
+    pointerType: "touch",
+  });
+  expect(
+    await mobile.evaluate(
+      () => matchMedia("(hover: hover) and (pointer: fine)").matches,
+    ),
+  ).toBe(false);
+  await expect(mobileCard).toHaveCSS("transform", "none");
+  const mobileHref = (await mobileCard.getAttribute("href"))!;
+  await mobileCard.tap();
+  await expect(mobile).toHaveURL(new URL(mobileHref, original).href);
+  await mobile.goto(original);
+  await expect(mobileCard).toHaveCSS("transform", "none");
+  await touch.close();
+}
+
 async function checkGalleryMotion(page: Page) {
   const hero = page.getByRole("button", { name: "Open full preview" });
   const dialog = page.locator("dialog.lightbox");
@@ -328,6 +537,32 @@ test("complete persistent library workflow", async ({ page }) => {
   expect(rejected.status()).toBe(400);
   await page.goto("/?q=" + encodeURIComponent(prompt));
   await checkGalleryLayout(page);
+  await checkSegmentFeedback(page);
+  await checkCardFeedback(page);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.screenshot({
+    path: "test-results/gallery-feedback-dark-grid.png",
+    fullPage: true,
+  });
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.getByRole("button", { name: "List view" }).click();
+  for (const [name, opacity] of [
+    ["List view", "1"],
+    ["Grid view", "0"],
+  ]) {
+    await expect
+      .poll(() =>
+        page
+          .getByRole("button", { name })
+          .evaluate((el) => getComputedStyle(el, "::before").opacity),
+      )
+      .toBe(opacity);
+  }
+  await page.screenshot({
+    path: "test-results/gallery-feedback-light-list.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Grid view" }).click();
   await page.getByRole("button", { name: "Portrait", exact: true }).click();
   await page.getByRole("button", { name: "Lighting", exact: true }).click();
   await expect(
@@ -346,6 +581,9 @@ test("complete persistent library workflow", async ({ page }) => {
     page.getByRole("heading", { name: group, exact: true }),
   ).toBeVisible();
   const groupUrl = page.url();
+  await page.goto("/groups");
+  await checkCardFeedback(page);
+  await page.goto(groupUrl);
   await expect(
     page.getByRole("combobox", { name: "Items per row" }),
   ).toHaveValue("2");

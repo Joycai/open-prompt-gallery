@@ -21,10 +21,16 @@ export function GalleryLayout({
   const [view, setView] = useState(initialView);
   const [columns, setColumns] = useState(initialColumns);
   const galleryId = useId();
+  const [motion, setMotion] = useState("instant");
   return (
     <div className="prompt-collection">
       <div className="gallery-view-controls">
-        <div className="segments" role="group" aria-label={t("Gallery view")}>
+        <div
+          className="segments motion-segments"
+          data-motion={motion}
+          role="group"
+          aria-label={t("Gallery view")}
+        >
           {(["grid", "list"] as const).map((value) => (
             <button
               type="button"
@@ -32,7 +38,8 @@ export function GalleryLayout({
               className={view === value ? "active" : ""}
               aria-pressed={view === value}
               aria-controls={galleryId}
-              onClick={() => {
+              onClick={(event) => {
+                setMotion(event.detail > 0 ? "animated" : "instant");
                 setView(value);
                 persist("view", value);
               }}

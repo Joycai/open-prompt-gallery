@@ -2,7 +2,13 @@
 import { useTranslations } from "@/components/preferences";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
-import { useTransition } from "react";
+import {
+  useLayoutEffect,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 export function Filters({
   tags,
 }: {
@@ -12,23 +18,49 @@ export function Filters({
   const router = useRouter(),
     params = useSearchParams(),
     [pending, start] = useTransition();
-  function update(key: string, value: string) {
-    const next = new URLSearchParams(params);
-    next.delete("page");
-    if (value) next.set(key, value);
-    else next.delete(key);
-    start(() => router.push("/?" + next));
+  const committedQuery = params.toString();
+  const [optimisticQuery, setOptimisticQuery] = useOptimistic(committedQuery);
+  const working = new URLSearchParams(optimisticQuery);
+  // Event handlers may run before the optimistic render. Preserve their latest intent.
+  const latestQuery = useRef(committedQuery);
+  useLayoutEffect(() => {
+    if (!pending) latestQuery.current = committedQuery;
+  }, [committedQuery, pending]);
+  const [motion, setMotion] = useState({
+    query: committedQuery,
+    mode: "instant",
+  });
+  // URL commits (including Back/Forward) settle before painting, without a fade.
+  if (motion.query !== committedQuery) {
+    setMotion({ query: committedQuery, mode: "instant" });
   }
-  const selected = params.getAll("tag");
-  function tag(name: string) {
-    const next = new URLSearchParams(params);
+  function submit(edit: (next: URLSearchParams) => void) {
+    const next = new URLSearchParams(latestQuery.current);
     next.delete("page");
-    next.delete("tag");
-    (selected.includes(name)
-      ? selected.filter((t) => t !== name)
-      : [...selected, name]
-    ).forEach((t) => next.append("tag", t));
-    start(() => router.push("/?" + next));
+    edit(next);
+    const query = next.toString();
+    latestQuery.current = query;
+    start(() => {
+      setOptimisticQuery(query);
+      router.push("/?" + query);
+    });
+  }
+  function update(key: string, value: string) {
+    submit((next) => {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    });
+  }
+  const selected = working.getAll("tag");
+  function tag(name: string) {
+    submit((next) => {
+      const current = next.getAll("tag");
+      next.delete("tag");
+      (current.includes(name)
+        ? current.filter((t) => t !== name)
+        : [...current, name]
+      ).forEach((t) => next.append("tag", t));
+    });
   }
   return (
     <div className={"filter-area " + (pending ? "pending" : "")}>
@@ -62,7 +94,11 @@ export function Filters({
             {t("Search")}
           </button>
         </form>
-        <div className="segments" aria-label={t("Prompt type")}>
+        <div
+          className="segments motion-segments"
+          data-motion={motion.mode}
+          aria-label={t("Prompt type")}
+        >
           {[
             ["", t("All")],
             ["full", t("Full prompts")],
@@ -70,9 +106,15 @@ export function Filters({
           ].map(([v, label]) => (
             <button
               key={v}
-              className={(params.get("kind") || "") === v ? "active" : ""}
-              aria-pressed={(params.get("kind") || "") === v}
-              onClick={() => update("kind", v)}
+              className={(working.get("kind") || "") === v ? "active" : ""}
+              aria-pressed={(working.get("kind") || "") === v}
+              onClick={(event) => {
+                setMotion({
+                  query: committedQuery,
+                  mode: event.detail > 0 ? "animated" : "instant",
+                });
+                update("kind", v);
+              }}
             >
               {label}
             </button>
@@ -85,10 +127,7 @@ export function Filters({
           <button
             className={"tag filter-tag " + (!selected.length ? "active" : "")}
             onClick={() => {
-              const n = new URLSearchParams(params);
-              n.delete("tag");
-              n.delete("page");
-              start(() => router.push("/?" + n));
+              submit((next) => next.delete("tag"));
             }}
           >
             {t("All tags")}
