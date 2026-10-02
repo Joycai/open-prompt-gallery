@@ -12,17 +12,15 @@ No Compose project or deployment bundle is required for this option. Download th
 4. Add a read/write volume mapping: NAS folder `/volume1/docker/open-prompt-gallery/uploads` → container path `/app/data/uploads`.
 5. Add these environment variables in Container Manager:
 
-| Variable         | Example / value                                                                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| `DB_URL`         | `postgresql://gallery:YOUR_URL_ENCODED_PASSWORD@192.168.1.100:5432/gallery`                      |
-| `APP_PASSWORD`   | Your strong gallery login password                                                               |
-| `SESSION_SECRET` | At least 32 random characters; generate with `openssl rand -hex 32`                              |
-| `APP_ORIGIN`     | `http://192.168.1.100:3000` — exact URL used in your browser, or your HTTPS reverse proxy origin |
-| `UPLOAD_DIR`     | `/app/data/uploads` (already the image default)                                                  |
+| Variable     | Example / value                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------ |
+| `DB_URL`     | `postgresql://gallery:YOUR_URL_ENCODED_PASSWORD@192.168.1.100:5432/gallery`                      |
+| `APP_ORIGIN` | `http://192.168.1.100:3000` — exact URL used in your browser, or your HTTPS reverse proxy origin |
+| `UPLOAD_DIR` | `/app/data/uploads` (already the image default)                                                  |
 
 `DB_URL` takes precedence over the existing `DATABASE_URL` name. Use a database address reachable from the container; `localhost` points to the container itself. The NAS folder is configured under **volume mappings**, not as an environment variable: `UPLOAD_DIR` always names the **container-side** path. Keep internal `PORT=3000` and `HOSTNAME=0.0.0.0` at their image defaults.
 
-Start the container, then open the configured origin and sign in. On startup it checks that the upload directory is writable, applies outstanding migrations, then starts Next.js. A migration failure prevents startup; inspect the container log and check the database address, permissions, and credentials. `RUN_MIGRATIONS=false` is optional only when migrations are run separately (as in the Compose option below).
+Start the container, then open the configured origin. On the first visit, create a password for `admin`. The account is stored in PostgreSQL and reused after upgrades; setup cannot replace an existing account. If upgrading with an existing `APP_PASSWORD`, it is imported once and you sign in with that password. Neither `APP_PASSWORD` nor `SESSION_SECRET` is required for new installations. Complete initial setup on a trusted network before public exposure. On startup it checks that the upload directory is writable, applies outstanding migrations, then starts Next.js. A migration failure prevents startup; inspect the container log and check the database address, permissions, and credentials. `RUN_MIGRATIONS=false` is optional only when migrations are run separately (as in the Compose option below).
 
 For upgrades, back up the external database and upload folder together, import a **new version** of the image, stop the old container, and create its replacement with the same environment, port and folder mappings. The new container migrates the existing database automatically. Keep the upload folder and database; do not run old and new containers together during upgrades. Previous releases made before this startup support was added need a new build/tag.
 
@@ -34,7 +32,7 @@ For upgrades, back up the external database and upload folder together, import a
    - 32-bit NAS devices are not supported. The NAS must support Container Manager/Docker.
 2. Verify your downloaded files against `SHA256SUMS` (`sha256sum --ignore-missing -c SHA256SUMS` on GNU/Linux, or compare `shasum -a 256` output). Extract the deployment archive into a permanent project folder, such as `/volume1/docker/open-prompt-gallery`.
 3. Load the matching image with `docker load -i open-prompt-gallery-VERSION-linux-ARCH.tar.gz`, or use Container Manager's image import. The archive contains the production Next.js standalone server and Linux dependencies, tagged `open-prompt-gallery:VERSION`.
-4. Copy `env.example` to `.env`. Keep the supplied `GALLERY_IMAGE` value; set a strong `APP_PASSWORD`, random `SESSION_SECRET` (32+ characters), and URL-safe hex `POSTGRES_PASSWORD`. Set `APP_ORIGIN` to the exact browser origin, including scheme and port. Use HTTPS for access beyond a trusted LAN.
+4. Copy `env.example` to `.env`. Keep the supplied `GALLERY_IMAGE` value; set a URL-safe hex `POSTGRES_PASSWORD`. Set `APP_ORIGIN` to the exact browser origin, including scheme and port. Use HTTPS for access beyond a trusted LAN.
 5. Create a Container Manager Project from this folder using `docker-compose.yml`, or run:
 
    ```sh
@@ -42,6 +40,8 @@ For upgrades, back up the external database and upload folder together, import a
    docker compose ps
    docker compose logs app
    ```
+
+After startup, open the app and create the admin password if this database has no account yet. Existing accounts remain unchanged.
 
 The app and migration services use the imported image only (`pull_policy: never`) and cannot build it. PostgreSQL is downloaded separately, so the first deployment needs internet access unless you also preload `postgres:17-alpine`. The `migrate` service exiting with code 0 is expected; the app waits for successful migrations. Named volumes retain the database and uploaded images. Never use `down -v` on a real library.
 

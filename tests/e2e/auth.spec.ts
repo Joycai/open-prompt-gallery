@@ -15,14 +15,12 @@ test("production login protects pages and image endpoints", async ({
       await request.get("/api/images/00000000-0000-0000-0000-000000000000")
     ).status(),
   ).toBe(401);
-  await page.getByLabel("Library password").fill("incorrect-test-password");
+  await page.getByLabel("Admin password").fill("incorrect-test-password");
   await page.getByRole("button", { name: "Open your library" }).click();
   await expect(
     page.getByRole("alert").filter({ hasText: "incorrect" }),
   ).toBeVisible();
-  await page
-    .getByLabel("Library password")
-    .fill(process.env.TEST_AUTH_PASSWORD!);
+  await page.getByLabel("Admin password").fill(process.env.TEST_AUTH_PASSWORD!);
   await page.getByRole("button", { name: "Open your library" }).click();
   await expect(
     page.getByRole("heading", { name: "All prompts", exact: true }),

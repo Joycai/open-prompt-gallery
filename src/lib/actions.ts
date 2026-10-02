@@ -9,13 +9,9 @@ import {
   parseTags,
   uuid,
 } from "./validation";
-import {
-  requireAuth,
-  authEnabled,
-  equal,
-  createSession,
-  clearSession,
-} from "./auth";
+import { requireAuth, createSession, clearSession } from "./auth";
+import { getAdmin, initializeAdmin } from "./account";
+import { verifyPassword } from "./password";
 import { cleanupFiles } from "./storage";
 export type ActionState = { error?: string };
 function message(error: unknown) {
@@ -175,18 +171,20 @@ export async function login(
   _: ActionState,
   form: FormData,
 ): Promise<ActionState> {
-  if (!authEnabled())
-    return {
-      error:
-        "Login is not configured. Set APP_PASSWORD and SESSION_SECRET, or explicitly enable private network mode.",
-    };
+  const admin = await getAdmin();
+  if (!admin) redirect("/setup");
   const accepted = await sql.begin(async (tx) => {
     const [attempt] =
       await tx`SELECT failures, window_start FROM login_attempts WHERE id=1 FOR UPDATE`;
     const expired =
       Date.now() - new Date(attempt.window_start).getTime() > 15 * 60 * 1000;
     if (!expired && attempt.failures >= 15) return "limited";
-    if (!equal(String(form.get("password") || ""), process.env.APP_PASSWORD!)) {
+    if (
+      !(await verifyPassword(
+        String(form.get("password") || ""),
+        admin.password_hash,
+      ))
+    ) {
       await tx`UPDATE login_attempts SET failures=${expired ? 1 : attempt.failures + 1},window_start=${expired ? new Date() : attempt.window_start} WHERE id=1`;
       return "incorrect";
     }
@@ -202,4 +200,21 @@ export async function login(
 export async function logout() {
   await clearSession();
   redirect("/login");
+}
+
+export async function setupAdmin(
+  _: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  if (await getAdmin())
+    return { error: "Setup is already complete. Please sign in." };
+  const password = String(form.get("password") || "");
+  if (password.length < 12 || password.length > 128)
+    return { error: "Use a password between 12 and 128 characters." };
+  if (password !== form.get("confirmPassword"))
+    return { error: "Passwords do not match." };
+  if (!(await initializeAdmin(password)))
+    return { error: "Setup is already complete. Please sign in." };
+  await createSession();
+  redirect("/");
 }

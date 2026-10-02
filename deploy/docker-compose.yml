@@ -32,9 +32,7 @@ services:
     environment:
       DATABASE_URL: postgresql://gallery:${POSTGRES_PASSWORD}@db:5432/gallery
       APP_PASSWORD: ${APP_PASSWORD:-}
-      SESSION_SECRET: ${SESSION_SECRET:-}
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
-      ALLOW_PRIVATE_NO_AUTH: ${ALLOW_PRIVATE_NO_AUTH:-false}
       UPLOAD_DIR: /app/data/uploads
       RUN_MIGRATIONS: "false"
     volumes:

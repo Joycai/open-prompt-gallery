@@ -5,6 +5,14 @@ const model = "Test model " + suffix,
   prompt = "Warm studio " + suffix,
   group = "Portrait studies " + suffix;
 test("complete persistent library workflow", async ({ page }) => {
+  if (process.env.TEST_AUTH_PASSWORD) {
+    await page.goto("/login");
+    await page
+      .getByLabel("Admin password")
+      .fill(process.env.TEST_AUTH_PASSWORD);
+    await page.getByRole("button", { name: "Open your library" }).click();
+    await expect(page).toHaveURL(/\/$/);
+  }
   await page.goto("/settings");
   const add = page.locator("section").filter({
     has: page.getByRole("heading", { name: "Add a model", exact: true }),

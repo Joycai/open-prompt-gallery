@@ -1,7 +1,13 @@
 "use client";
 import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { savePrompt, saveModel, saveGroup, login } from "@/lib/actions";
+import {
+  savePrompt,
+  saveModel,
+  saveGroup,
+  login,
+  setupAdmin,
+} from "@/lib/actions";
 import type { Model, Group, Prompt } from "@/lib/data";
 function Feedback({ error }: { error?: string }) {
   return error ? (
@@ -247,7 +253,7 @@ export function LoginForm() {
   return (
     <form action={action}>
       <label>
-        Library password
+        Admin password
         <input
           type="password"
           name="password"
@@ -259,6 +265,46 @@ export function LoginForm() {
       <Feedback error={state.error} />
       <button className="button primary" disabled={pending}>
         {pending ? "Opening…" : "Open your library"}
+      </button>
+    </form>
+  );
+}
+
+export function SetupForm() {
+  const [state, action, pending] = useActionState(setupAdmin, {});
+  return (
+    <form action={action}>
+      <label>
+        Username
+        <input name="username" value="admin" readOnly autoComplete="username" />
+      </label>
+      <label>
+        Password
+        <input
+          name="password"
+          type="password"
+          minLength={12}
+          maxLength={128}
+          required
+          autoComplete="new-password"
+          autoFocus
+        />
+      </label>
+      <p className="form-note">Use at least 12 characters.</p>
+      <label>
+        Confirm password
+        <input
+          name="confirmPassword"
+          type="password"
+          minLength={12}
+          maxLength={128}
+          required
+          autoComplete="new-password"
+        />
+      </label>
+      <Feedback error={state.error} />
+      <button className="button primary" disabled={pending}>
+        {pending ? "Creating account…" : "Create admin account"}
       </button>
     </form>
   );

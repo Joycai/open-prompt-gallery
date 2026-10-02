@@ -10,7 +10,7 @@ A self-hosted home for full prompts, reusable prompt pieces, and visual inspirat
 - Collect prompts across models into groups. Deleting a group preserves its prompts.
 - Upload multiple independent images to prompts and groups, browse previews, select a cover, reorder, and remove images.
 - Responsive desktop/mobile navigation, keyboard focus, native confirmation dialogs, reduced motion/transparency and increased contrast support.
-- Optional single-owner password login; no external AI service or API key required.
+- First-run setup for a persistent admin account; no external AI service or API key required.
 
 ## Local development with Podman
 
@@ -37,7 +37,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Open **http://localhost:3000**. Add a model in Settings, then create a prompt. No demo content is seeded. The development database listens on loopback port 5433; the app listens on loopback port 3000. `APP_ORIGIN` must exactly match the browser origin, including scheme and port, for uploads.
+Open **http://localhost:3000** and create the admin password. Add a model in Settings, then create a prompt. No demo content is seeded. The development database listens on loopback port 5433; the app listens on loopback port 3000. `APP_ORIGIN` must exactly match the browser origin, including scheme and port, for uploads.
 
 ```sh
 npm run lint
@@ -45,28 +45,32 @@ npm run typecheck
 npm test                   # unit checks; database suite skipped
 npm run test:db            # uses DATABASE_URL; creates/removes dedicated test records
 npx playwright install chromium
-npm run test:e2e           # run against the local dev server, no login configured
+npm run test:e2e           # set TEST_AUTH_PASSWORD for an initialized test server
 npm run build
 ```
+
+To check initialization, point `DATABASE_URL` at a freshly migrated disposable database whose name ends in `_auth_test`, then run `RUN_ACCOUNT_TESTS=1 node --import tsx --test tests/account.test.ts`. This suite checks concurrent setup and legacy import and removes its test account. For browser setup checks, start an isolated server against another freshly migrated database with no `APP_PASSWORD`, then run `TEST_FIRST_RUN=1 TEST_BASE_URL=http://127.0.0.1:3003 npx playwright test tests/e2e/setup.spec.ts`. That test initializes the database with the test password `setup-test-password-123`.
 
 The end-to-end test creates uniquely named records. If interrupted, its test records may remain. Do not run it against a production library.
 
 ## Access and configuration
 
-| Variable                    | Purpose                                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------------- |
-| `DB_URL`                    | Container connection URL; takes precedence over `DATABASE_URL`.                                   |
-| `RUN_MIGRATIONS`            | Container startup automatically migrates; set `false` only when running migrations separately.    |
-| `DATABASE_URL`              | PostgreSQL connection URL. URL-encode credentials if needed.                                      |
-| `UPLOAD_DIR`                | Persistent image directory, relative to app working directory or absolute.                        |
-| `APP_ORIGIN`                | Exact externally visible origin, e.g. `https://prompts.example.com`.                              |
-| `APP_PASSWORD`              | Single-owner password. Leave empty only in development or explicitly private mode.                |
-| `SESSION_SECRET`            | At least 32 random characters when login is enabled. Rotate to invalidate all sessions.           |
-| `ALLOW_PRIVATE_NO_AUTH`     | Set to `true` to explicitly allow unauthenticated production access on a trusted private network. |
-| `POSTGRES_PASSWORD`         | Compose database password; use a URL-safe random hex string.                                      |
-| `BIND_ADDRESS` / `APP_PORT` | Compose published interface and port; default `127.0.0.1:3000`.                                   |
+| Variable                    | Purpose                                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `DB_URL`                    | Container connection URL; takes precedence over `DATABASE_URL`.                                |
+| `RUN_MIGRATIONS`            | Container startup automatically migrates; set `false` only when running migrations separately. |
+| `DATABASE_URL`              | PostgreSQL connection URL. URL-encode credentials if needed.                                   |
+| `UPLOAD_DIR`                | Persistent image directory, relative to app working directory or absolute.                     |
+| `APP_ORIGIN`                | Exact externally visible origin, e.g. `https://prompts.example.com`.                           |
+| `APP_PASSWORD`              | Optional legacy bootstrap password; imported once if no admin exists, then ignored.            |
+| `POSTGRES_PASSWORD`         | Compose database password; use a URL-safe random hex string.                                   |
+| `BIND_ADDRESS` / `APP_PORT` | Compose published interface and port; default `127.0.0.1:3000`.                                |
 
-Production fails closed without a password or explicit private mode. Configure a strong password and generate a session secret with `openssl rand -hex 32`. Sessions last seven days, are HTTP-only, and use secure cookies when `APP_ORIGIN` is HTTPS. Login attempts are limited to 15 failures per 15-minute window for the installation. This is a shared single-owner library, not a multi-tenant account system.
+On the first visit, the app asks you to create a password (12–128 characters) for the fixed `admin` account. A salted scrypt hash and a randomly generated session-signing secret are stored in PostgreSQL. Once the account exists, setup is closed, including direct setup submissions. Restarts, image replacements, and migrations preserve the account; existing prompts alone do not count as an initialized account.
+
+For upgrades from environment-based login, an existing `APP_PASSWORD` is imported automatically on first access when no database account exists. Continue signing in with the same password; old sessions must sign in again. After initialization, changing or removing `APP_PASSWORD` does not change the database password. `SESSION_SECRET` and `ALLOW_PRIVATE_NO_AUTH` are no longer used. Installations without a prior password must complete setup, even if they already have prompts. Complete initial setup on your trusted network before exposing a fresh installation publicly.
+
+Sessions last seven days, are HTTP-only, and use secure cookies when `APP_ORIGIN` is HTTPS. Login attempts are limited to 15 failures per 15-minute window for the installation. This remains a single-admin library; additional accounts and password recovery are not included. Back up PostgreSQL to preserve the account along with your library.
 
 Use HTTPS and a reverse proxy for access beyond a trusted network. Configure the proxy to preserve the Host header and pass the public scheme; cap request bodies at 11 MB and apply connection/request limits. Next.js documents self-hosting considerations in its [official guide](https://nextjs.org/docs/app/guides/self-hosting).
 
@@ -90,14 +94,14 @@ The **Package release** GitHub Actions workflow validates the code and builds pr
 
 Review the assets, then publish the draft in GitHub. No registry account or additional secret is needed; the workflow uses the repository's automatic `GITHUB_TOKEN`. Actions must be enabled and permitted to use the listed Docker/GitHub actions. Failed jobs can be rerun while the release is a draft; published release assets are never overwritten. Use a new version tag for updates. Tag versions are authoritative for image names; keep `package.json` version in sync when cutting releases.
 
-**Standalone Container Manager deployment (external PostgreSQL):** import the image archive for your NAS CPU, create a container with `DB_URL`, `APP_PASSWORD`, `SESSION_SECRET`, and `APP_ORIGIN`, map NAS port 3000 to container port 3000, and mount a writable NAS folder at `/app/data/uploads`. The image automatically runs database migrations before starting the app. No Compose file is needed. See [the step-by-step Container Manager guide](deploy/README.md#option-a-container-manager-image-import--external-postgresql), including folder permissions and upgrade instructions.
+**Standalone Container Manager deployment (external PostgreSQL):** import the image archive for your NAS CPU, create a container with `DB_URL` and `APP_ORIGIN`, map NAS port 3000 to container port 3000, and mount a writable NAS folder at `/app/data/uploads`. The image automatically runs database migrations before starting the app. No Compose file is needed. See [the step-by-step Container Manager guide](deploy/README.md#option-a-container-manager-image-import--external-postgresql), including folder permissions and upgrade instructions.
 
 **Optional Compose deployment (bundled PostgreSQL):** On the NAS, download the deployment bundle and the image for its CPU, verify checksums, extract the bundle, and import the image:
 
 ```sh
 docker load -i open-prompt-gallery-v0.1.0-linux-amd64.tar.gz
 cp env.example .env
-# Edit .env: passwords, session secret, and the exact public APP_ORIGIN.
+# Edit .env: database password and the exact public APP_ORIGIN.
 docker compose up -d
 ```
 
@@ -117,7 +121,7 @@ CREATE ROLE gallery LOGIN;
 CREATE DATABASE gallery OWNER gallery;
 ```
 
-Clone the repository and configure `.env` with `DATABASE_URL=postgresql://gallery:YOUR_URL_ENCODED_PASSWORD@127.0.0.1:5432/gallery`, an absolute writable `UPLOAD_DIR`, `APP_ORIGIN`, `APP_PASSWORD`, and `SESSION_SECRET`. Keep `.env` readable only by the app's OS user. Run the app as that user:
+Clone the repository and configure `.env` with `DATABASE_URL=postgresql://gallery:YOUR_URL_ENCODED_PASSWORD@127.0.0.1:5432/gallery`, an absolute writable `UPLOAD_DIR` and `APP_ORIGIN`. Keep `.env` readable only by the app's OS user. Run the app as that user:
 
 ```sh
 npm ci
