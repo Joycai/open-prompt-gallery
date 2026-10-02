@@ -1,6 +1,12 @@
 name: Package release
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release version (e.g. v0.1.0). Existing tags are rebuilt; new tags use the selected branch."
+        required: true
+        type: string
   push:
     tags: ["v*"]
 
@@ -8,19 +14,37 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   check:
     runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.source.outputs.tag }}
+      sha: ${{ steps.source.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
-      - name: Validate release tag
+      - name: Resolve release source
+        id: source
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9][a-zA-Z0-9.-]*)?$ ]] || { echo 'Use v1.2.3 or v1.2.3-beta.1'; exit 1; }
+          # Resolve an existing tag, or use the selected workflow branch commit.
+          if git ls-remote --exit-code --refs origin "refs/tags/$RELEASE_TAG" > /dev/null; then
+            git fetch --no-tags origin "refs/tags/$RELEASE_TAG"
+            SOURCE_SHA=$(git rev-parse 'FETCH_HEAD^{commit}')
+          else
+            status=$?
+            [[ "$status" == 2 ]] || exit "$status"
+            SOURCE_SHA=$(git rev-parse HEAD)
+          fi
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -41,6 +65,8 @@ jobs:
         arch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check.outputs.sha }}
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - name: Build production image
@@ -48,14 +74,14 @@ jobs:
         with:
           context: .
           platforms: linux/${{ matrix.arch }}
-          tags: open-prompt-gallery:${{ github.ref_name }}
+          tags: open-prompt-gallery:${{ needs.check.outputs.tag }}
           load: true
           provenance: false
           cache-from: type=gha,scope=release-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=release-${{ matrix.arch }}
       - name: Check native dependencies and export image
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
           ARCH: ${{ matrix.arch }}
         run: |
           docker run --rm --platform "linux/$ARCH" --entrypoint node "open-prompt-gallery:$RELEASE_TAG" -e "require('sharp')({create:{width:1,height:1,channels:3,background:'white'}}).webp().toBuffer().then(()=>console.log('Image decoder ready')).catch(e=>{console.error(e);process.exit(1)})"
@@ -70,12 +96,14 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: image
+    needs: [check, image]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check.outputs.sha }}
       - uses: actions/download-artifact@v4
         with:
           pattern: image-*
@@ -83,7 +111,7 @@ jobs:
           merge-multiple: true
       - name: Package deployment files and checksums
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
         run: |
           mkdir -p bundle
           cp deploy/docker-compose.yml deploy/README.md bundle/
@@ -94,11 +122,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          SOURCE_SHA: ${{ needs.check.outputs.sha }}
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             [[ "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" == true ]] || { echo 'Refusing to replace assets on a published release.'; exit 1; }
           else
-            gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --generate-notes
+            gh release create "$RELEASE_TAG" --target "$SOURCE_SHA" --draft --title "$RELEASE_TAG" --generate-notes
           fi
           gh release upload "$RELEASE_TAG" dist/*.tar.gz dist/SHA256SUMS --clobber

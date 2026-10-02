@@ -77,6 +77,8 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
+You can also open **Actions → Package release → Run workflow**, choose a branch, and enter a version such as `v0.1.0`. If the tag already exists, that tagged commit is built; otherwise the selected branch commit is built and the tag is created with the draft release after packaging succeeds. All jobs use the same resolved commit.
+
 The **Package release** GitHub Actions workflow validates the code and builds production Docker images for Linux AMD64 and ARM64. It creates a **draft GitHub release** with:
 
 - `open-prompt-gallery-v0.1.0-linux-amd64.tar.gz`
