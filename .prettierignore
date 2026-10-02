@@ -1,0 +1,9 @@
+.next
+node_modules
+package-lock.json
+next-env.d.ts
+docs/design/concepts
+AGENTS.md
+CLAUDE.md
+test-results
+data
