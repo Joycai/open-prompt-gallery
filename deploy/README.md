@@ -10,7 +10,7 @@ No Compose project or deployment bundle is required for this option. Download th
 2. Create a persistent NAS folder, for example `/volume1/docker/open-prompt-gallery/uploads`. Grant the container's UID/GID **1000:1000** read/write/traverse access to this folder (including DSM ACLs where applicable).
 3. Select the imported image and create a container. Keep its default command. Set automatic restart and map NAS port **3000** to container TCP port **3000** (choose another NAS port if occupied).
 4. Add a read/write volume mapping: NAS folder `/volume1/docker/open-prompt-gallery/uploads` → container path `/app/data/uploads`.
-5. Add these environment variables in Container Manager:
+5. Set these environment variables in Container Manager. The image declares `DB_URL` with an empty default so it can appear in the environment list; fill in your PostgreSQL connection URL. Add it manually if your DSM version does not show empty defaults:
 
 | Variable     | Example / value                                                                                  |
 | ------------ | ------------------------------------------------------------------------------------------------ |
