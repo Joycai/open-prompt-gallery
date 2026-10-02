@@ -4,6 +4,7 @@ import { Plus, Library, SearchX } from "lucide-react";
 import { getModels, getPrompts, getTags } from "@/lib/data";
 import { PromptCard } from "@/components/cards";
 import { Filters } from "@/components/filters";
+import { PromptCollection } from "@/components/prompt-collection";
 type Params = Record<string, string | string[] | undefined>;
 export default async function LibraryPage({
   searchParams,
@@ -78,11 +79,11 @@ export default async function LibraryPage({
                 : t("Full prompts & reusable pieces")}
             </span>
           </div>
-          <div className="card-grid">
+          <PromptCollection>
             {prompts.slice(0, 24).map((prompt) => (
               <PromptCard key={prompt.id} prompt={prompt} back={back} />
             ))}
-          </div>
+          </PromptCollection>
           <nav className="pagination" aria-label={t("Pagination")}>
             {page > 1 && (
               <Link className="button" href={pageUrl(page - 1)}>

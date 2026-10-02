@@ -6,6 +6,7 @@ import { getGroups, getImages, getPrompts } from "@/lib/data";
 import { ImageGallery } from "@/components/image-gallery";
 import { DeleteButton } from "@/components/detail-controls";
 import { PromptCard } from "@/components/cards";
+import { PromptCollection } from "@/components/prompt-collection";
 export default async function GroupPage({
   params,
   searchParams,
@@ -58,11 +59,11 @@ export default async function GroupPage({
         </Link>
       </div>
       {prompts.length ? (
-        <div className="card-grid">
+        <PromptCollection>
           {prompts.slice(0, 24).map((p) => (
             <PromptCard key={p.id} prompt={p} />
           ))}
-        </div>
+        </PromptCollection>
       ) : (
         <div className="empty-state compact">
           <h2>{t("Your collection is ready.")}</h2>
