@@ -192,7 +192,9 @@ test("complete persistent library workflow", async ({ page }) => {
   await page
     .getByLabel("Prompt", { exact: true })
     .fill("A warm portrait with soft light and a linen outfit.");
-  await page.getByRole("textbox", { name: /^Tags/ }).fill("Portrait, Lighting");
+  await page
+    .getByRole("combobox", { name: /^Tags/ })
+    .fill("Portrait, Lighting");
   await page.getByRole("button", { name: "Save prompt" }).click();
   await expect(
     page.getByRole("heading", { name: prompt, exact: true }),
@@ -286,6 +288,117 @@ test("complete persistent library workflow", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText("1 image added");
   await checkGalleryMotion(page);
   await checkDeleteCancellation(page, group, "group");
+  // Create a new item from the original, including group membership, but no images.
+  await page.goto(promptUrl);
+  await page.getByRole("link", { name: "Create a copy", exact: true }).click();
+  await expect(page.locator('input[name="id"]')).toHaveValue("");
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue(
+    prompt + " (copy)",
+  );
+  await expect(page.getByLabel("Prompt", { exact: true })).toHaveValue(
+    "A warm portrait with soft light and a linen outfit.",
+  );
+  await expect(
+    page
+      .getByRole("combobox", { name: "Model", exact: true })
+      .locator("option:checked"),
+  ).toHaveText(model);
+  await expect(
+    page.getByRole("checkbox", { name: group, exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole("combobox", { name: "Prompt type", exact: true }),
+  ).toHaveValue("full");
+  const tags = page.getByRole("combobox", { name: /^Tags/ });
+  await expect(tags).toHaveValue("Lighting, Portrait");
+  await tags.fill("New tag, po");
+  await expect(
+    page.getByRole("option", { name: "Portrait", exact: true }),
+  ).toBeVisible();
+  await tags.press("ArrowDown");
+  await tags.press("Enter");
+  await expect(tags).toHaveValue("New tag, Portrait, ");
+  await tags.fill("New tag, Portrait, li");
+  await page.getByRole("option", { name: "Lighting", exact: true }).click();
+  await expect(tags).toHaveValue("New tag, Portrait, Lighting, ");
+  await tags.fill("Portrait, por");
+  await expect(
+    page.getByRole("option", { name: "Portrait", exact: true }),
+  ).toHaveCount(0);
+  await tags.fill("Portrait, li");
+  await tags.press("Escape");
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await tags.fill("Portrait, Lighting");
+  const markdown =
+    "# Copy vision\n\nA **warm** portrait.\n\n- Soft light\n\n```text\nraw prompt\n```\n\n| Mood | Light |\n| --- | --- |\n| Calm | Soft |";
+  await page.getByLabel("Prompt", { exact: true }).fill(markdown);
+  await page.getByRole("button", { name: "Save prompt", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: prompt + " (copy)", exact: true }),
+  ).toBeVisible();
+  const copyUrl = page.url();
+  expect(copyUrl).not.toBe(promptUrl);
+  await expect(
+    page.getByRole("heading", { name: "Copy vision", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".prompt-body strong")).toHaveText("warm");
+  await expect(page.locator(".prompt-body table")).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: "test-results/markdown-copy-mobile.png",
+    fullPage: true,
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(
+    page.getByRole("button", { name: "Preview image 1", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: group, exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Copy prompt", exact: true }).click();
+  // Native form submission and clipboard APIs can use CRLF line endings.
+  expect(
+    (await page.evaluate(() => navigator.clipboard.readText())).replace(
+      /\r\n/g,
+      "\n",
+    ),
+  ).toBe(markdown);
+  await page.getByRole("link", { name: "Edit prompt", exact: true }).click();
+  await expect(page.getByLabel("Prompt", { exact: true })).toHaveValue(
+    markdown,
+  );
+  await page.getByRole("combobox", { name: /^Tags/ }).fill("po");
+  await expect(
+    page.getByRole("option", { name: "Portrait", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Cancel", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Delete " + prompt + " (copy)", exact: true })
+    .click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Delete prompt", exact: true })
+    .click();
+  await page.goto(promptUrl);
+  await expect(page.locator(".prompt-body")).toHaveText(
+    "A warm portrait with soft light and a linen outfit.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Preview image 2", exact: true }),
+  ).toBeVisible();
+  await page.goto("/prompts/new?copy=00000000-0000-4000-8000-000000000000");
+  await expect(
+    page.getByRole("heading", { name: "This page wandered off." }),
+  ).toBeVisible();
+  await page.goto("/prompts/new?copy=invalid");
+  await expect(
+    page.getByRole("heading", { name: "This page wandered off." }),
+  ).toBeVisible();
   await page.goto("/settings");
   await checkDeleteCancellation(page, model, "model");
   const modelRow = page

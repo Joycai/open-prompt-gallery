@@ -1,5 +1,11 @@
 // English source messages are stable translation keys. Keep placeholders in sync.
 export const zhCN = {
+  "Create a copy": "创建副本",
+  "{title} (copy)": "{title}（副本）",
+  "Create a new prompt from this copy. Preview images can be added after saving.":
+    "以此副本创建新提示词。保存后可添加预览图。",
+  "Markdown formatting is supported.": "支持 Markdown 格式。",
+  "Existing tags": "已有标签",
   "Could not upload this image. Check its format and try again.":
     "无法上传此图片，请检查格式后重试。",
   "All prompts": "所有提示词",

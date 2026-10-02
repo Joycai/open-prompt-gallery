@@ -1559,3 +1559,97 @@ input.visually-hidden {
 .auth-language {
   margin-bottom: 24px;
 }
+
+/* Prompt Markdown keeps source whitespace in text and code, with semantic blocks. */
+.prompt-markdown {
+  white-space: normal;
+}
+.prompt-markdown p {
+  white-space: pre-wrap;
+}
+.prompt-markdown > :first-child {
+  margin-top: 0;
+}
+.prompt-markdown > :last-child {
+  margin-bottom: 0;
+}
+.prompt-markdown :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--ink);
+  font-size: 1.1em;
+  margin: 1.2em 0 0.5em;
+}
+.prompt-markdown :is(ul, ol) {
+  padding-left: 1.5em;
+}
+.prompt-markdown blockquote {
+  border-left: 3px solid var(--line);
+  margin-left: 0;
+  padding-left: 1em;
+}
+.prompt-markdown code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+  background: var(--surface);
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+.prompt-markdown pre {
+  white-space: pre;
+  overflow-x: auto;
+  background: var(--surface);
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.prompt-markdown pre code {
+  padding: 0;
+}
+.prompt-markdown a {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+.prompt-markdown img {
+  max-width: 100%;
+  height: auto;
+}
+.prompt-markdown table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+.prompt-markdown :is(th, td) {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+}
+.prompt-markdown input[type="checkbox"] {
+  width: auto;
+}
+.tag-input-wrapper {
+  position: relative;
+  display: block;
+}
+.tag-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: grid;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+.tag-suggestions [role="option"] {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.tag-suggestions [role="option"]:is(:hover, [aria-selected="true"]) {
+  background: var(--accent-soft);
+}
+.toolbar-actions {
+  flex-wrap: wrap;
+}

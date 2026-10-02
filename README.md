@@ -5,7 +5,9 @@ A self-hosted home for full prompts, reusable prompt pieces, and visual inspirat
 ## Features
 
 - Manage model categories in Settings; models in use cannot be deleted.
-- Create, edit, copy, and delete full prompts and reusable pieces.
+- Create, edit, and delete full prompts and reusable pieces. Use **Create a copy** on a prompt to prefill a new item with its text, model, type, tags, and groups; add preview images after saving.
+- Render Markdown prompt content, including lists, code blocks, links, and tables. **Copy prompt** copies the original Markdown source.
+- Reuse existing gallery tags with suggestions while typing comma-separated tags; select a suggestion with a click or Arrow keys and Enter.
 - Search titles, prompt text, and tags; combine model, type, and **match-all** tag filters. Filters live in the URL; results are paginated.
 - Collect prompts across models into groups. Deleting a group preserves its prompts.
 - Upload multiple independent images to prompts and groups, browse previews, select a cover, reorder, and remove images.
