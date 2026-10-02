@@ -4,6 +4,7 @@ import { translateFeedback } from "@/lib/i18n";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Copy, Check, Trash2, X } from "lucide-react";
+import { useDialogMotion } from "@/components/use-dialog-motion";
 import { deleteItem } from "@/lib/actions";
 export function CopyButton({ body }: { body: string }) {
   const t = useTranslations();
@@ -53,19 +54,22 @@ export function DeleteButton({
     router = useRouter(),
     [pending, start] = useTransition(),
     [error, setError] = useState("");
+  const motion = useDialogMotion(ref);
   return (
     <>
       <button
         className="button danger-quiet"
         aria-label={t("Delete {name}", { name })}
-        onClick={() => ref.current?.showModal()}
+        onClick={(event) => motion.open(event.detail > 0)}
       >
         <Trash2 size={16} />
         <span>{t("Delete")}</span>
       </button>
       <dialog
         ref={ref}
-        className="dialog"
+        className="dialog motion-dialog"
+        onCancel={motion.onCancel}
+        onClose={motion.onClose}
         aria-labelledby={"delete-title-" + id}
       >
         <div className="dialog-heading">
@@ -75,7 +79,7 @@ export function DeleteButton({
           <button
             className="icon-button"
             aria-label={t("Close")}
-            onClick={() => ref.current?.close()}
+            onClick={(event) => motion.close(event.detail > 0)}
           >
             <X size={20} />
           </button>
@@ -94,7 +98,10 @@ export function DeleteButton({
           </p>
         )}
         <div className="form-actions">
-          <button className="button" onClick={() => ref.current?.close()}>
+          <button
+            className="button"
+            onClick={(event) => motion.close(event.detail > 0)}
+          >
             {t("Keep {kind}", { kind: t(kind) })}
           </button>
           <button
@@ -105,7 +112,7 @@ export function DeleteButton({
                 const result = await deleteItem(kind, id);
                 if (result.error) setError(result.error);
                 else {
-                  ref.current?.close();
+                  motion.close(false);
                   router.push(
                     kind === "group"
                       ? "/groups"

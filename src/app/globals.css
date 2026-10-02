@@ -46,6 +46,7 @@
 }
 :root {
   --radius: 14px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   font:
     15px/1.5 -apple-system,
     BlinkMacSystemFont,
@@ -1013,6 +1014,36 @@ dialog::backdrop {
   background: #15223955;
   backdrop-filter: blur(4px);
 }
+/* Only pointer-triggered surface changes animate; native modality is unchanged. */
+.motion-dialog {
+  opacity: 0;
+  transform: scale(0.97);
+  transform-origin: center;
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+.motion-dialog::backdrop {
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+.motion-dialog[data-phase="open"] {
+  opacity: 1;
+  transform: scale(1);
+}
+.motion-dialog[data-phase="open"]::backdrop {
+  opacity: 1;
+}
+.image-manager[data-phase] {
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+}
+.image-manager[data-phase="open"] {
+  opacity: 1;
+}
+.image-manager[inert] {
+  pointer-events: none;
+}
 .dialog-heading {
   display: flex;
   justify-content: space-between;
@@ -1408,6 +1439,29 @@ input.visually-hidden {
   .button:active {
     transform: none;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-dialog[data-motion="animated"],
+  .motion-dialog[data-motion="animated"]::backdrop,
+  .image-manager[data-motion="animated"] {
+    transition: opacity 100ms var(--ease-out) !important;
+  }
+  .motion-dialog {
+    transform: none;
+  }
+  .motion-dialog[data-phase="open"] {
+    transform: none;
+  }
+  .image-manager[data-phase="entering"],
+  .image-manager[data-phase="closing"] {
+    opacity: 0.7;
+  }
+}
+/* These also win over the scoped reduced-motion exceptions above. */
+.motion-dialog[data-motion="instant"],
+.motion-dialog[data-motion="instant"]::backdrop,
+.image-manager[data-motion="instant"] {
+  transition: none !important;
 }
 @media (prefers-reduced-transparency: reduce) {
   .glass {
