@@ -2,14 +2,8 @@
 import { useTranslations } from "@/components/preferences";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import {
-  Library,
-  Layers,
-  Settings,
-  Box,
-  ChevronDown,
-  Sparkles,
-} from "lucide-react";
+import { Library, Layers, Settings, Box, ChevronDown } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import type { Model } from "@/lib/data";
 export function Sidebar({ models }: { models: Model[] }) {
   const t = useTranslations();
@@ -66,9 +60,7 @@ export function Sidebar({ models }: { models: Model[] }) {
   return (
     <aside className="sidebar glass">
       <Link href="/" className="brand">
-        <span className="brand-mark">
-          <Sparkles size={22} />
-        </span>
+        <BrandMark />
         <span>
           Open Prompt<span className="brand-sub">Gallery</span>
         </span>
