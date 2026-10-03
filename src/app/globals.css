@@ -766,7 +766,23 @@ main {
   align-items: start;
 }
 .gallery-section {
+  position: relative;
   min-width: 0;
+}
+.gallery-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 2px dashed var(--accent-text);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--accent-text);
+  pointer-events: none;
 }
 .hero-image {
   position: relative;

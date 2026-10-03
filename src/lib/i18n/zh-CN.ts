@@ -174,6 +174,8 @@ export const zhCN = {
   "Add images that capture the idea.": "添加能表达创意的图片。",
   "Uploading…": "正在上传…",
   "Add images": "添加图片",
+  "Drop images to upload": "松开图片即可上传",
+  "Drag images here or use Add images.": "将图片拖到这里，或点击添加图片。",
   "Cancel upload": "取消上传",
   Done: "完成",
   "Manage images": "管理图片",
