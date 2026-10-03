@@ -2,7 +2,14 @@ import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Pencil, Layers, CopyPlus } from "lucide-react";
-import { getPrompt, getImages, getMemberships } from "@/lib/data";
+import {
+  getPrompt,
+  getImages,
+  getMemberships,
+  getModels,
+  getGroups,
+} from "@/lib/data";
+import { promptReturnPath, promptReturnLabel } from "@/lib/prompt-navigation";
 import { CopyButton, DeleteButton } from "@/components/detail-controls";
 import { PromptMarkdown } from "@/components/prompt-markdown";
 import { ImageGallery } from "@/components/image-gallery";
@@ -11,7 +18,7 @@ export default async function PromptPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ back?: string }>;
+  searchParams: Promise<{ back?: string | string[] }>;
 }) {
   const t = await getTranslations();
   const { id } = await params;
@@ -22,20 +29,35 @@ export default async function PromptPage({
     searchParams,
   ]);
   if (!p) notFound();
-  const back = search.back?.startsWith("/?") ? search.back : "/";
+  const back = promptReturnPath(search.back);
+  const [models, allGroups] = await Promise.all([getModels(), getGroups()]);
+  const backLabel = promptReturnLabel(
+    back,
+    models,
+    allGroups,
+    t("All prompts"),
+  );
   return (
     <>
       <div className="detail-toolbar glass">
         <Link className="back-link" href={back}>
           <ArrowLeft size={17} />
-          {t("All prompts")}
+          {backLabel}
         </Link>
         <div className="toolbar-actions">
           <Link className="button" href={"/prompts/new?copy=" + id}>
             <CopyPlus size={16} />
             {t("Create a copy")}
           </Link>
-          <Link className="button" href={"/prompts/" + id + "/edit"}>
+          <Link
+            className="button"
+            href={
+              "/prompts/" +
+              id +
+              "/edit" +
+              (back === "/" ? "" : "?back=" + encodeURIComponent(back))
+            }
+          >
             <Pencil size={16} />
             {t("Edit prompt")}
           </Link>
