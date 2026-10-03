@@ -1,6 +1,6 @@
 import { getTranslations } from "@/lib/i18n/server";
 import { LanguageSelect } from "@/components/preferences";
-import { Sparkles } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { SetupForm } from "@/components/forms";
 import { getAdmin } from "@/lib/account";
 import { redirect } from "next/navigation";
@@ -14,9 +14,7 @@ export default async function Setup() {
         <div className="auth-language">
           <LanguageSelect />
         </div>
-        <span className="brand-mark">
-          <Sparkles size={26} />
-        </span>
+        <BrandMark named />
         <h1>{t("Make this library yours.")}</h1>
         <p className="muted">
           {t(
