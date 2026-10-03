@@ -17,6 +17,7 @@ import type { GalleryImage } from "@/lib/data";
 import { useDialogMotion } from "@/components/use-dialog-motion";
 import { usePanelMotion } from "@/components/use-panel-motion";
 import { changeImage } from "@/lib/actions";
+import { pickImageFiles } from "@/lib/image-picker";
 export function ImageGallery({
   images,
   owner,
@@ -45,7 +46,15 @@ export function ImageGallery({
   const manager = usePanelMotion(managerPanel, managerTrigger);
   const managerId = useId();
   const current = images.find((i) => i.id === selected) || images[0];
-  async function upload(files: FileList | null) {
+  async function addImages() {
+    try {
+      const files = await pickImageFiles(window, () => input.current?.click());
+      await upload(files);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+  async function upload(files: FileList | File[] | null) {
     if (!files?.length) return;
     setUploading(true);
     setError("");
@@ -165,11 +174,7 @@ export function ImageGallery({
           disabled={uploading}
           onChange={(e) => upload(e.target.files)}
         />
-        <button
-          className="button"
-          disabled={uploading}
-          onClick={() => input.current?.click()}
-        >
+        <button className="button" disabled={uploading} onClick={addImages}>
           <Upload size={16} />
           {uploading ? t("Uploading…") : t("Add images")}
         </button>
