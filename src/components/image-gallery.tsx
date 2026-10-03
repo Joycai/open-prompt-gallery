@@ -34,6 +34,7 @@ export function ImageGallery({
   const [selected, setSelected] = useState(images[0]?.id),
     [error, setError] = useState(""),
     [uploading, setUploading] = useState(false),
+    [dragging, setDragging] = useState(false),
     [progress, setProgress] = useState(""),
     [pending, start] = useTransition();
   const dialog = useRef<HTMLDialogElement>(null),
@@ -45,6 +46,8 @@ export function ImageGallery({
   const managerTrigger = useRef<HTMLButtonElement>(null);
   const manager = usePanelMotion(managerPanel, managerTrigger);
   const managerId = useId();
+  const dragDepth = useRef(0);
+  const uploadActive = useRef(false);
   const current = images.find((i) => i.id === selected) || images[0];
   async function addImages() {
     try {
@@ -55,7 +58,8 @@ export function ImageGallery({
     }
   }
   async function upload(files: FileList | File[] | null) {
-    if (!files?.length) return;
+    if (!files?.length || uploadActive.current) return;
+    uploadActive.current = true;
     setUploading(true);
     setError("");
     abort.current = new AbortController();
@@ -96,6 +100,7 @@ export function ImageGallery({
       );
       setProgress("");
     } finally {
+      uploadActive.current = false;
       setUploading(false);
       router.refresh();
       if (input.current) input.current.value = "";
@@ -109,7 +114,38 @@ export function ImageGallery({
     });
   }
   return (
-    <section className="gallery-section" aria-label={t("Preview images")}>
+    <section
+      className="gallery-section"
+      aria-label={t("Preview images")}
+      onDragEnter={(event) => {
+        if (!event.dataTransfer.types.includes("Files")) return;
+        event.preventDefault();
+        dragDepth.current++;
+        if (!uploadActive.current) setDragging(true);
+      }}
+      onDragOver={(event) => {
+        if (!event.dataTransfer.types.includes("Files")) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = uploadActive.current ? "none" : "copy";
+      }}
+      onDragLeave={() => {
+        dragDepth.current = Math.max(0, dragDepth.current - 1);
+        if (dragDepth.current === 0) setDragging(false);
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        dragDepth.current = 0;
+        setDragging(false);
+        // Copy the files while the drop event's data store is still readable.
+        void upload(Array.from(event.dataTransfer.files));
+      }}
+    >
+      {dragging && (
+        <div className="gallery-drop-overlay" aria-hidden="true">
+          <Upload size={28} />
+          <strong>{t("Drop images to upload")}</strong>
+        </div>
+      )}
       {current ? (
         <>
           <button
@@ -197,6 +233,7 @@ export function ImageGallery({
         )}
       </div>
       <small className="muted">
+        {t("Drag images here or use Add images.")}{" "}
         {t("JPEG, PNG, WebP or AVIF · Up to 10 MB each")}
       </small>
       {progress && (

@@ -485,10 +485,31 @@ test("complete persistent library workflow", async ({ page }) => {
   })
     .png()
     .toBuffer();
-  await page.locator("input[type=file]").setInputFiles([
-    { name: "warm.png", mimeType: "image/png", buffer: red },
-    { name: "cool.png", mimeType: "image/png", buffer: blue },
-  ]);
+  const droppedFiles = await page.evaluateHandle(
+    (files) => {
+      const transfer = new DataTransfer();
+      for (const file of files) {
+        const bytes = Uint8Array.from(atob(file.base64), (c) =>
+          c.charCodeAt(0),
+        );
+        transfer.items.add(new File([bytes], file.name, { type: "image/png" }));
+      }
+      return transfer;
+    },
+    [
+      { name: "warm.png", base64: red.toString("base64") },
+      { name: "cool.png", base64: blue.toString("base64") },
+    ],
+  );
+  const gallery = page.getByRole("region", { name: "Preview images" });
+  await gallery.dispatchEvent("dragenter", { dataTransfer: droppedFiles });
+  await expect(page.locator(".gallery-drop-overlay")).toBeVisible();
+  await gallery.dispatchEvent("dragleave", { dataTransfer: droppedFiles });
+  await expect(page.locator(".gallery-drop-overlay")).toHaveCount(0);
+  await gallery.dispatchEvent("dragenter", { dataTransfer: droppedFiles });
+  await gallery.dispatchEvent("drop", { dataTransfer: droppedFiles });
+  await expect(page.locator(".gallery-drop-overlay")).toHaveCount(0);
+  await droppedFiles.dispose();
   await expect(page.getByRole("status")).toContainText("2 images added");
   await expect(
     page.getByRole("button", { name: "Preview image 2", exact: true }),
