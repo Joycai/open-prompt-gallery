@@ -61,7 +61,11 @@ export default async function GroupPage({
       {prompts.length ? (
         <PromptCollection>
           {prompts.slice(0, 24).map((p) => (
-            <PromptCard key={p.id} prompt={p} />
+            <PromptCard
+              key={p.id}
+              prompt={p}
+              back={"/groups/" + id + (page > 1 ? "?page=" + page : "")}
+            />
           ))}
         </PromptCollection>
       ) : (

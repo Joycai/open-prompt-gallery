@@ -581,6 +581,34 @@ test("complete persistent library workflow", async ({ page }) => {
     page.getByRole("heading", { name: group, exact: true }),
   ).toBeVisible();
   const groupUrl = page.url();
+  // Preserve the collection origin through editing, cancellation, and saving.
+  const modelHref = await page
+    .locator(".model-nav a")
+    .filter({ hasText: model })
+    .first()
+    .getAttribute("href");
+  for (const origin of [
+    new URL(groupUrl).pathname,
+    modelHref! + "&q=" + encodeURIComponent(prompt),
+  ]) {
+    await page.goto(origin);
+    await page.getByRole("heading", { name: prompt, exact: true }).click();
+    const backLink = page.locator(".detail-toolbar .back-link");
+    await expect(backLink).toHaveAttribute("href", origin);
+    await expect(backLink).toHaveText(
+      origin.startsWith("/groups/") ? group : model,
+    );
+    await page.getByRole("link", { name: "Edit prompt", exact: true }).click();
+    await page.getByRole("link", { name: "Cancel", exact: true }).click();
+    await expect(backLink).toHaveAttribute("href", origin);
+    await page.getByRole("link", { name: "Edit prompt", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Save prompt", exact: true })
+      .click();
+    await expect(backLink).toHaveAttribute("href", origin);
+    await backLink.click();
+    await expect(page).toHaveURL(new URL(origin, groupUrl).href);
+  }
   await page.goto("/groups");
   await checkCardFeedback(page);
   await page.goto(groupUrl);

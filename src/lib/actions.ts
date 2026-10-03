@@ -13,6 +13,7 @@ import { requireAuth, createSession, clearSession } from "./auth";
 import { getAdmin, initializeAdmin } from "./account";
 import { verifyPassword } from "./password";
 import { cleanupFiles } from "./storage";
+import { promptDetailPath } from "./prompt-navigation";
 export type ActionState = { error?: string };
 function message(error: unknown) {
   const code = (error as { code?: string }).code;
@@ -60,7 +61,7 @@ export async function savePrompt(
     return { error: message(error) };
   }
   revalidatePath("/", "layout");
-  redirect("/prompts/" + id);
+  redirect(promptDetailPath(id, form.get("back")));
 }
 export async function saveModel(
   _: ActionState,

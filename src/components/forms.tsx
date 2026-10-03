@@ -12,6 +12,7 @@ import {
 } from "@/lib/actions";
 import { TagInput } from "@/components/tag-input";
 import type { Model, Group, Prompt } from "@/lib/data";
+import { promptDetailPath } from "@/lib/prompt-navigation";
 function Feedback({ error }: { error?: string }) {
   const locale = useLocale();
   return error ? (
@@ -28,6 +29,7 @@ export function PromptForm({
   defaultModel,
   initialValues,
   existingTags = [],
+  back = "/",
 }: {
   models: Model[];
   groups: Group[];
@@ -36,6 +38,7 @@ export function PromptForm({
   defaultModel?: string;
   initialValues?: Pick<Prompt, "title" | "body" | "model_id" | "kind" | "tags">;
   existingTags?: string[];
+  back?: string;
 }) {
   const t = useTranslations();
   const values = prompt ?? initialValues;
@@ -43,6 +46,7 @@ export function PromptForm({
   return (
     <form action={action} className="editor-form">
       <input type="hidden" name="id" value={prompt?.id || ""} />
+      <input type="hidden" name="back" value={back} />
       <div className="form-section">
         <label>
           {t("Title")}
@@ -136,7 +140,10 @@ export function PromptForm({
       </p>
       <Feedback error={state.error} />
       <div className="form-actions">
-        <Link className="button" href={prompt ? "/prompts/" + prompt.id : "/"}>
+        <Link
+          className="button"
+          href={prompt ? promptDetailPath(prompt.id, back) : "/"}
+        >
           {t("Cancel")}
         </Link>
         <button className="button primary" disabled={pending}>
