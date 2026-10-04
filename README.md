@@ -104,6 +104,18 @@ The **Package release** GitHub Actions workflow validates the code and builds pr
 
 Review the assets, then publish the draft in GitHub. No registry account or additional secret is needed; the workflow uses the repository's automatic `GITHUB_TOKEN`. Actions must be enabled and permitted to use the listed Docker/GitHub actions. Failed jobs can be rerun while the release is a draft; published release assets are never overwritten. Use a new version tag for updates. Tag versions are authoritative for image names; keep `package.json` version in sync when cutting releases.
 
+After the draft assets are ready, the workflow also pushes the checked images to **GitHub Container Registry (`ghcr.io`)** using `GITHUB_TOKEN` with `packages: write`. The version tag supports both Linux AMD64 and ARM64; Docker selects the matching architecture automatically:
+
+```sh
+docker pull ghcr.io/joycai/open-prompt-gallery:v0.1.0
+```
+
+Replace `v0.1.0` with your release version. Architecture-specific tags (`v0.1.0-amd64` and `v0.1.0-arm64`) are also published. No `latest` tag is updated. Forks publish under their own lowercase `owner/repository` path. Images appear in the owner's **Packages** tab and link to the source repository. Registry publishing happens while the GitHub release is still a draft; rerunning a draft release can replace its image tags.
+
+New GHCR packages default to private. For anonymous pulls, open the package's **Package settings** and change its visibility to public. Otherwise, run `docker login ghcr.io` using your GitHub username and a classic personal access token with `read:packages`. If a package with this name already exists, grant this repository access under the package's **Manage Actions access** settings before running the workflow.
+
+For the bundled Compose deployment, pull the GHCR image first and set `GALLERY_IMAGE=ghcr.io/joycai/open-prompt-gallery:v0.1.0` in `.env`. The bundle uses `pull_policy: never`, so repeat the explicit pull before each upgrade. The archive import method below remains available.
+
 **Standalone Container Manager deployment (external PostgreSQL):** import the image archive for your NAS CPU, create a container with `DB_URL` and `APP_ORIGIN`, map NAS port 3000 to container port 3000, and mount a writable NAS folder at `/app/data/uploads`. The image automatically runs database migrations before starting the app. No Compose file is needed. See [the step-by-step Container Manager guide](deploy/README.md#option-a-container-manager-image-import--external-postgresql), including folder permissions and upgrade instructions.
 
 **Optional Compose deployment (bundled PostgreSQL):** On the NAS, download the deployment bundle and the image for its CPU, verify checksums, extract the bundle, and import the image:
