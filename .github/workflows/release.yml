@@ -75,6 +75,10 @@ jobs:
           context: .
           platforms: linux/${{ matrix.arch }}
           tags: open-prompt-gallery:${{ needs.check.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ needs.check.outputs.sha }}
+            org.opencontainers.image.version=${{ needs.check.outputs.tag }}
           load: true
           provenance: false
           cache-from: type=gha,scope=release-${{ matrix.arch }}
@@ -131,3 +135,42 @@ jobs:
             gh release create "$RELEASE_TAG" --target "$SOURCE_SHA" --draft --title "$RELEASE_TAG" --generate-notes
           fi
           gh release upload "$RELEASE_TAG" dist/*.tar.gz dist/SHA256SUMS --clobber
+
+  publish:
+    # Publish only after both architectures pass checks and draft assets are ready.
+    needs: [check, image, release]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: image-*
+          path: dist
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish checked images and multi-platform tag
+        env:
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          for ARCH in amd64 arm64; do
+            docker load -i "dist/open-prompt-gallery-$RELEASE_TAG-linux-$ARCH.tar.gz"
+            docker tag "open-prompt-gallery:$RELEASE_TAG" "$IMAGE:$RELEASE_TAG-$ARCH"
+            docker push "$IMAGE:$RELEASE_TAG-$ARCH"
+          done
+          docker buildx imagetools create \
+            --tag "$IMAGE:$RELEASE_TAG" \
+            "$IMAGE:$RELEASE_TAG-amd64" \
+            "$IMAGE:$RELEASE_TAG-arm64"
+          docker buildx imagetools inspect --raw "$IMAGE:$RELEASE_TAG" | \
+            jq -e '[.manifests[].platform | .os + "/" + .architecture] | sort == ["linux/amd64", "linux/arm64"]'
+          echo "Pull the release: \`docker pull $IMAGE:$RELEASE_TAG\`" >> "$GITHUB_STEP_SUMMARY"
