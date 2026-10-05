@@ -6,12 +6,16 @@ export default async function NewGroup() {
   return (
     <>
       <Link className="back-link" href="/groups">
-        {t("← Groups")}
+        {t("← Collections")}
       </Link>
       <header className="page-header">
         <div>
-          <h1>{t("New group")}</h1>
-          <p>{t("Make a collection of connected ideas.")}</p>
+          <h1>{t("New collection")}</h1>
+          <p>
+            {t(
+              "Give related prompts a home. A prompt can belong to more than one collection.",
+            )}
+          </p>
         </div>
       </header>
       <GroupEditor />

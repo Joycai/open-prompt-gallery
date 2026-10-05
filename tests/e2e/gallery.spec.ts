@@ -594,10 +594,25 @@ test("complete persistent library workflow", async ({ page }) => {
     page.getByRole("heading", { name: "No prompts found" }),
   ).toBeVisible();
   await page.goto("/groups/new");
-  await page.getByLabel("Group name").fill(group);
+  await page
+    .getByRole("button", {
+      name: "Character One character, many expressions and outfits.",
+    })
+    .click();
+  await expect(page.getByLabel("Collection name")).toHaveValue(
+    "Luna the explorer",
+  );
+  await page.getByLabel("Collection name").fill(group);
   await page.getByLabel("Description").fill("A collection for testing");
   await page.getByRole("checkbox", { name: prompt + " " + model }).check();
-  await page.getByRole("button", { name: "Save group" }).click();
+  // Filtering must never drop selected memberships from the submitted form.
+  await page
+    .getByRole("searchbox", { name: "Search prompts" })
+    .fill("no-such-prompt-" + suffix);
+  await expect(
+    page.getByText("No matching items. Try another search."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Save collection" }).click();
   await expect(
     page.getByRole("heading", { name: group, exact: true }),
   ).toBeVisible();
@@ -631,6 +646,11 @@ test("complete persistent library workflow", async ({ page }) => {
     await expect(page).toHaveURL(new URL(origin, groupUrl).href);
   }
   await page.goto("/groups");
+  await page.getByRole("searchbox", { name: "Search collections" }).fill(group);
+  await expect(
+    page.getByRole("heading", { name: group, exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".card-preview img").first()).toBeVisible();
   await checkCardFeedback(page);
   await page.goto(groupUrl);
   await expect(
@@ -642,12 +662,13 @@ test("complete persistent library workflow", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: prompt, exact: true }),
   ).toBeVisible();
+  await page.getByText("Custom cover & reference images").click();
   await page
     .locator("input[type=file]")
     .setInputFiles({ name: "group.png", mimeType: "image/png", buffer: blue });
   await expect(page.getByRole("status")).toContainText("1 image added");
   await checkGalleryMotion(page);
-  await checkDeleteCancellation(page, group, "group");
+  await checkDeleteCancellation(page, group, "collection");
   // Create a new item from the original, including group membership, but no images.
   await page.goto(promptUrl);
   await page.getByRole("link", { name: "Create a copy", exact: true }).click();
@@ -850,7 +871,7 @@ test("complete persistent library workflow", async ({ page }) => {
     .click();
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Delete group", exact: true })
+    .getByRole("button", { name: "Delete collection", exact: true })
     .click();
   await expect(page).toHaveURL(/\/groups$/);
   await page.goto("/settings");

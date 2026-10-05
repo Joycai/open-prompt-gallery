@@ -106,7 +106,7 @@ export default async function PromptPage({
             </div>
           </div>
           <div className="detail-section">
-            <h3>{t("In these groups")}</h3>
+            <h3>{t("Collections")}</h3>
             {groups.length ? (
               groups.map((g) => (
                 <Link
@@ -120,7 +120,7 @@ export default async function PromptPage({
               ))
             ) : (
               <p className="muted">
-                {t("Edit this prompt to add it to a group.")}
+                {t("Edit this prompt to add it to a collection.")}
               </p>
             )}
           </div>

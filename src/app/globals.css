@@ -1824,3 +1824,82 @@ input.visually-hidden {
 .prompt-card[data-press-motion="instant"] {
   transition: none !important;
 }
+
+.collection-search {
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+.collection-card-wrap {
+  min-width: 0;
+  display: flex;
+}
+.collection-card-wrap > .prompt-card {
+  width: 100%;
+}
+.collection-starter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.collection-starter {
+  text-align: left;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.collection-starter strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent-text);
+}
+.collection-starter span {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.collection-starter:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 3px;
+}
+.membership-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  font-size: 0.8rem;
+}
+.membership-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.membership-picker .check-label:has(input:checked) {
+  border-color: var(--accent-text);
+  background: var(--accent-soft);
+}
+.membership-picker .check-label span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.collection-references {
+  border-top: 1px solid var(--line);
+  margin-top: 32px;
+  padding-top: 20px;
+}
+.collection-references summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 12px 0;
+}
+@media (max-width: 600px) {
+  .collection-starter-grid {
+    grid-template-columns: 1fr;
+  }
+}

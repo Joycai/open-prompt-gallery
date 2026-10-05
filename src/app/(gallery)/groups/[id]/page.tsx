@@ -32,12 +32,12 @@ export default async function GroupPage({
       <div className="detail-toolbar glass">
         <Link href="/groups" className="back-link">
           <ArrowLeft size={17} />
-          {t("Groups")}
+          {t("Collections")}
         </Link>
         <div className="toolbar-actions">
           <Link className="button" href={"/groups/" + id + "/edit"}>
             <Pencil size={16} />
-            {t("Edit group")}
+            {t("Edit collection")}
           </Link>
           <DeleteButton kind="group" id={id} name={g.name} />
         </div>
@@ -49,11 +49,8 @@ export default async function GroupPage({
         <h1>{g.name}</h1>
         <p>{g.description}</p>
       </header>
-      <div className="group-gallery">
-        <ImageGallery owner="group" id={id} images={images} title={g.name} />
-      </div>
       <div className="section-heading">
-        <h2>{t("In this group")}</h2>
+        <h2>{t("Prompts in this collection")}</h2>
         <Link className="text-button" href={"/groups/" + id + "/edit"}>
           {t("Manage prompts")}
         </Link>
@@ -71,7 +68,10 @@ export default async function GroupPage({
       ) : (
         <div className="empty-state compact">
           <h2>{t("Your collection is ready.")}</h2>
-          <p>{t("Edit the group to add prompts from your library.")}</p>
+          <p>{t("Add prompts from your library to start this collection.")}</p>
+          <Link className="button primary" href={"/groups/" + id + "/edit"}>
+            {t("Manage prompts")}
+          </Link>
         </div>
       )}
       <nav className="pagination" aria-label={t("Pagination")}>
@@ -92,6 +92,15 @@ export default async function GroupPage({
           </Link>
         )}
       </nav>
+      <details className="collection-references">
+        <summary>
+          {t("Custom cover & reference images")}{" "}
+          <span className="muted">· {t("Optional")}</span>
+        </summary>
+        <div className="group-gallery">
+          <ImageGallery owner="group" id={id} images={images} title={g.name} />
+        </div>
+      </details>
     </>
   );
 }
