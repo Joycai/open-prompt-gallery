@@ -1,5 +1,15 @@
 // English source messages are stable translation keys. Keep placeholders in sync.
 export const zhCN = {
+  Category: "分类",
+  Background: "背景",
+  Concept: "概念",
+  "Choose or type a category": "选择或输入分类",
+  "Optional. Use Character, Background, Concept, or your own category.":
+    "选填。可使用角色、背景、概念，或自定义分类。",
+  "Expand collections": "展开合集",
+  "Collapse collections": "收起合集",
+  "No collections yet.": "暂无合集。",
+
   Collections: "合集",
   "New collection": "新建合集",
   "Create your first collection": "创建第一个合集",

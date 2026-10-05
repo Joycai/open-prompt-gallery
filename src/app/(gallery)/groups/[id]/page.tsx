@@ -47,6 +47,9 @@ export default async function GroupPage({
           {t("COLLECTION · {count} PROMPTS", { count: g.count })}
         </div>
         <h1>{g.name}</h1>
+        {g.category && (
+          <span className="badge collection-category">{g.category}</span>
+        )}
         <p>{g.description}</p>
       </header>
       <div className="section-heading">

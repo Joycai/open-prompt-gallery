@@ -95,10 +95,10 @@ export async function saveGroup(
       let row;
       if (g.id)
         [row] =
-          await tx`UPDATE groups SET name=${g.name},description=${g.description} WHERE id=${g.id} RETURNING id`;
+          await tx`UPDATE groups SET name=${g.name},description=${g.description},category=${g.category} WHERE id=${g.id} RETURNING id`;
       else
         [row] =
-          await tx`INSERT INTO groups(name,description) VALUES(${g.name},${g.description}) RETURNING id`;
+          await tx`INSERT INTO groups(name,description,category) VALUES(${g.name},${g.description},${g.category}) RETURNING id`;
       if (!row) throw new Error("Group not found");
       await tx`DELETE FROM group_prompts WHERE group_id=${row.id}`;
       for (const p of new Set(g.prompts))

@@ -78,6 +78,9 @@ export async function GroupCard({ group: g }: { group: Group }) {
         <p className="muted clamp-two">
           {g.description || t("A collection of ideas that belong together.")}
         </p>
+        {g.category && (
+          <span className="badge collection-category">{g.category}</span>
+        )}
         <span className="badge">
           {t(g.count === 1 ? "{count} prompt" : "{count} prompts", {
             count: g.count,

@@ -19,6 +19,7 @@ export async function GroupEditor({ id }: { id?: string }) {
   return (
     <GroupForm
       group={group}
+      categories={[...new Set(groups.map((g) => g.category).filter(Boolean))]}
       prompts={prompts}
       selected={selected.map((p) => p.prompt_id)}
     />

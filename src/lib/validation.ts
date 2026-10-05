@@ -18,6 +18,7 @@ export const groupSchema = z.object({
   id: z.union([uuid, z.literal("")]),
   name: z.string().trim().min(1).max(160),
   description: z.string().trim().max(5000),
+  category: z.string().trim().max(80).default(""),
   prompts: z.array(uuid).max(1000),
 });
 export function parseTags(input: string) {

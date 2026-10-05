@@ -602,6 +602,9 @@ test("complete persistent library workflow", async ({ page }) => {
   await expect(page.getByLabel("Collection name")).toHaveValue(
     "Luna the explorer",
   );
+  await expect(page.getByLabel("Category", { exact: true })).toHaveValue(
+    "Character",
+  );
   await page.getByLabel("Collection name").fill(group);
   await page.getByLabel("Description").fill("A collection for testing");
   await page.getByRole("checkbox", { name: prompt + " " + model }).check();
@@ -617,6 +620,35 @@ test("complete persistent library workflow", async ({ page }) => {
     page.getByRole("heading", { name: group, exact: true }),
   ).toBeVisible();
   const groupUrl = page.url();
+  await expect(page.locator(".detail-heading .collection-category")).toHaveText(
+    "Character",
+  );
+  const collectionNav = page.locator(".desktop-nav .collection-nav");
+  await expect(
+    collectionNav.getByRole("link").filter({ hasText: group }),
+  ).toHaveAttribute("aria-current", "page");
+  await collectionNav
+    .getByRole("button", { name: "Collapse collections" })
+    .click();
+  await expect(collectionNav.locator(".collection-nav-list")).toBeHidden();
+  await collectionNav
+    .getByRole("button", { name: "Expand collections" })
+    .click();
+  await expect(collectionNav.locator(".collection-nav-list")).toBeVisible();
+  await page.goto(groupUrl + "/edit");
+  await expect(page.getByLabel("Category", { exact: true })).toHaveValue(
+    "Character",
+  );
+  await page.getByLabel("Category", { exact: true }).fill("Costume studies");
+  await page.getByRole("button", { name: "Save collection" }).click();
+  await expect(page.locator(".detail-heading .collection-category")).toHaveText(
+    "Costume studies",
+  );
+  await page.reload();
+  await expect(page.locator(".detail-heading .collection-category")).toHaveText(
+    "Costume studies",
+  );
+
   // Preserve the collection origin through editing, cancellation, and saving.
   const modelHref = await page
     .locator(".model-nav a")

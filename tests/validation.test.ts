@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseTags, promptSchema } from "../src/lib/validation";
+import { parseTags, promptSchema, groupSchema } from "../src/lib/validation";
 test("tags normalize case, whitespace and Unicode without duplicates", () => {
   assert.deepEqual(parseTags(" Portrait, portrait, Ｌｉｇｈｔ ,"), [
     { normalized: "portrait", name: "portrait" },
@@ -19,5 +19,22 @@ test("tags and prompt inputs reject invalid values", () => {
       groups: [],
       tags: "",
     }),
+  );
+});
+
+test("collection categories support legacy forms, blank values, and custom categories", () => {
+  const collection = { id: "", name: "Study", description: "", prompts: [] };
+  assert.equal(groupSchema.parse(collection).category, "");
+  assert.equal(
+    groupSchema.parse({ ...collection, category: "   " }).category,
+    "",
+  );
+  assert.equal(
+    groupSchema.parse({ ...collection, category: " Costume studies " })
+      .category,
+    "Costume studies",
+  );
+  assert.throws(() =>
+    groupSchema.parse({ ...collection, category: "x".repeat(81) }),
   );
 });

@@ -1,11 +1,77 @@
 "use client";
 import { useTranslations } from "@/components/preferences";
 import Link from "next/link";
+import { useId, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Library, Layers, Settings, Box, ChevronDown } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import type { Model } from "@/lib/data";
-export function Sidebar({ models }: { models: Model[] }) {
+import type { Model, Group } from "@/lib/data";
+function CollectionNav({ groups }: { groups: Group[] }) {
+  const t = useTranslations();
+  const path = usePathname();
+  const [expanded, setExpanded] = useState(true);
+  const listId = useId();
+  return (
+    <div className="collection-nav">
+      <div className="collection-nav-heading">
+        <Link
+          className={"nav-link " + (path === "/groups" ? "selected" : "")}
+          href="/groups"
+          aria-current={path === "/groups" ? "page" : undefined}
+        >
+          <Layers size={19} />
+          <span>{t("Collections")}</span>
+          <small>{groups.length}</small>
+        </Link>
+        <button
+          type="button"
+          className="collection-toggle"
+          aria-label={t(
+            expanded ? "Collapse collections" : "Expand collections",
+          )}
+          aria-expanded={expanded}
+          aria-controls={listId}
+          onClick={() => setExpanded(!expanded)}
+        >
+          <ChevronDown size={16} />
+        </button>
+      </div>
+      <div id={listId} className="collection-nav-list" hidden={!expanded}>
+        {groups.map((g) => {
+          const selected =
+            path === "/groups/" + g.id || path === "/groups/" + g.id + "/edit";
+          return (
+            <Link
+              key={g.id}
+              href={"/groups/" + g.id}
+              className={"nav-link " + (selected ? "selected" : "")}
+              aria-current={selected ? "page" : undefined}
+              title={g.category ? g.name + " · " + g.category : g.name}
+            >
+              <span className="collection-nav-name">
+                <span>{g.name}</span>
+                {g.category && (
+                  <span className="collection-nav-category">{g.category}</span>
+                )}
+              </span>
+              <small>{g.count}</small>
+            </Link>
+          );
+        })}
+        {!groups.length && (
+          <p className="nav-hint">{t("No collections yet.")}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+export function Sidebar({
+  models,
+  groups,
+}: {
+  models: Model[];
+  groups: Group[];
+}) {
   const t = useTranslations();
   const path = usePathname(),
     params = useSearchParams(),
@@ -19,13 +85,7 @@ export function Sidebar({ models }: { models: Model[] }) {
         <Library size={19} />
         {t("All prompts")}
       </Link>
-      <Link
-        className={"nav-link " + (path.startsWith("/groups") ? "selected" : "")}
-        href="/groups"
-      >
-        <Layers size={19} />
-        {t("Collections")}
-      </Link>
+      <CollectionNav groups={groups} />
       <div className="nav-label">
         {t("Models")}
         <span>{models.length}</span>

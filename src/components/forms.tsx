@@ -199,10 +199,12 @@ export function ModelForm({ model }: { model?: Model }) {
 }
 export function GroupForm({
   group,
+  categories = [],
   prompts,
   selected = [],
 }: {
   group?: Group;
+  categories?: string[];
   prompts: { id: string; title: string; model_name: string }[];
   selected?: string[];
 }) {
@@ -210,6 +212,7 @@ export function GroupForm({
   const [state, action, pending] = useActionState(saveGroup, {});
   const [name, setName] = useState(group?.name ?? "");
   const [description, setDescription] = useState(group?.description ?? "");
+  const [category, setCategory] = useState(group?.category ?? "");
   return (
     <form action={action} className="editor-form">
       <input type="hidden" name="id" value={group?.id || ""} />
@@ -242,6 +245,9 @@ export function GroupForm({
                 key={label}
                 onClick={() => {
                   setName(t(example));
+                  setCategory(
+                    t(label === "Backgrounds" ? "Background" : label),
+                  );
                   setDescription(t(detail));
                 }}
               >
@@ -267,6 +273,35 @@ export function GroupForm({
             autoFocus
           />
         </label>
+        <label>
+          {t("Category")}
+          <input
+            name="category"
+            list="collection-categories"
+            maxLength={80}
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder={t("Choose or type a category")}
+            aria-describedby="category-hint"
+          />
+          <datalist id="collection-categories">
+            {[
+              ...new Set([
+                t("Character"),
+                t("Background"),
+                t("Concept"),
+                ...categories,
+              ]),
+            ].map((category) => (
+              <option key={category} value={category} />
+            ))}
+          </datalist>
+        </label>
+        <p className="form-note" id="category-hint">
+          {t(
+            "Optional. Use Character, Background, Concept, or your own category.",
+          )}
+        </p>
         <label>
           {t("Description")}
           <textarea

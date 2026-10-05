@@ -7,6 +7,7 @@ export type Model = {
   count: number;
 };
 export type Group = {
+  category: string;
   id: string;
   name: string;
   description: string;
