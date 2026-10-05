@@ -9,7 +9,7 @@ Updated 2026-10-02. The approved design has been implemented; this replaces the 
 - Model CRUD, full prompt/piece CRUD, copy, tags, URL-backed combined filters, pagination, group CRUD and memberships across models.
 - Multiple independent images for prompts and groups, uploads, full preview, cover selection, ordering, removal, server-side decode/size checks and filesystem cleanup queue.
 - Persistent single-admin authentication with first-run setup. Password hashes and session signing secrets live in PostgreSQL; environment passwords are imported once for upgrades. No multi-account or per-user isolation.
-- Multi-stage Linux Docker image, production and development Compose files, PM2 standalone launcher, setup/upgrade/backup instructions in README.
+- Multi-stage Linux Docker image, production and development Compose files, PM2 standalone launcher, setup/upgrade/backup instructions in the [deployment guide](../deploy/README.md).
 
 ## Actual verification
 
