@@ -11,11 +11,11 @@ export default async function EditGroup({
   return (
     <>
       <Link className="back-link" href={"/groups/" + id}>
-        {t("← Back to group")}
+        {t("← Back to collection")}
       </Link>
       <header className="page-header">
         <div>
-          <h1>{t("Edit group")}</h1>
+          <h1>{t("Edit collection")}</h1>
           <p>{t("Refine your collection.")}</p>
         </div>
       </header>

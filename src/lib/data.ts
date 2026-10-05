@@ -39,7 +39,7 @@ export async function getModels() {
 export async function getGroups() {
   return sql<
     Group[]
-  >`SELECT g.*, (SELECT count(*)::int FROM group_prompts gp WHERE gp.group_id=g.id) AS count, (SELECT id FROM images WHERE group_id=g.id ORDER BY position,created_at,id LIMIT 1) AS cover FROM groups g ORDER BY lower(name)`;
+  >`SELECT g.*, (SELECT count(*)::int FROM group_prompts gp WHERE gp.group_id=g.id) AS count, COALESCE((SELECT id FROM images WHERE group_id=g.id ORDER BY position,created_at,id LIMIT 1), (SELECT i.id FROM images i JOIN group_prompts gp ON gp.prompt_id=i.prompt_id WHERE gp.group_id=g.id ORDER BY i.position,i.created_at,i.id LIMIT 1)) AS cover FROM groups g ORDER BY lower(name)`;
 }
 export async function getTags() {
   return sql<

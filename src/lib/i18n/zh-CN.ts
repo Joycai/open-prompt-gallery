@@ -1,5 +1,53 @@
 // English source messages are stable translation keys. Keep placeholders in sync.
 export const zhCN = {
+  Collections: "合集",
+  "New collection": "新建合集",
+  "Create your first collection": "创建第一个合集",
+  "Edit this prompt to add it to a collection.": "编辑此提示词，将其加入合集。",
+  "Edit collection": "编辑合集",
+  "Prompts in this collection": "合集内的提示词",
+  "Add prompts from your library to start this collection.":
+    "从提示词库添加提示词，开始整理此合集。",
+  "← Collections": "← 合集",
+  "← Back to collection": "← 返回合集",
+  "Create a collection for a character, backgrounds, or a project.":
+    "为角色、背景或项目创建合集。",
+  "Collection name": "合集名称",
+  "Save collection": "保存合集",
+  "Organize prompts by character, background, or project.":
+    "按角色、背景或项目整理提示词。",
+  "Keep one character’s variations together, collect backgrounds, or organize a whole project.":
+    "汇集同一角色的不同版本、收集背景，或整理整个项目。",
+  "Give related prompts a home. A prompt can belong to more than one collection.":
+    "汇集相关提示词。每个提示词可以加入多个合集。",
+  "e.g. Luna the explorer, Backgrounds, Storybook project":
+    "例如：探险家露娜、背景、绘本项目",
+  "Your collection cover comes from its prompts. You can also add a custom cover.":
+    "合集封面自动取自其中的提示词，也可以添加自定义封面。",
+  collection: "合集",
+  "Start with an idea": "从一个想法开始",
+  Character: "角色",
+  Backgrounds: "背景",
+  Project: "项目",
+  "One character, many expressions and outfits.": "同一角色的不同表情与服装。",
+  "Scenes and environments for your next creation.":
+    "为下一次创作收集场景与环境。",
+  "Everything for a story, series, or shared style.":
+    "汇集故事、系列或共同风格的所有提示词。",
+  "Search collections": "搜索合集",
+  "No matching collections": "没有匹配的合集",
+  "Search by name or description": "按名称或描述搜索",
+  "Search by title or model": "按标题或模型搜索",
+  "Selected only": "仅显示已选",
+  "{count} selected": "已选 {count} 项",
+  "No matching items. Try another search.": "没有匹配项，请尝试其他搜索词。",
+  "No selected items yet.": "尚未选择任何项目。",
+  "A prompt can belong to several collections.": "每个提示词可以加入多个合集。",
+  "Custom cover & reference images": "自定义封面与参考图",
+  Optional: "选填",
+  "Luna the explorer": "探险家露娜",
+  "Storybook project": "绘本项目",
+
   "Gallery view": "图库视图",
   "Grid view": "网格视图",
   "List view": "列表视图",

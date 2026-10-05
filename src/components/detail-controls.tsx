@@ -74,7 +74,9 @@ export function DeleteButton({
       >
         <div className="dialog-heading">
           <h2 id={"delete-title-" + id}>
-            {t("Delete {kind}?", { kind: t(kind) })}
+            {t("Delete {kind}?", {
+              kind: t(kind === "group" ? "collection" : kind),
+            })}
           </h2>
           <button
             className="icon-button"
@@ -102,7 +104,9 @@ export function DeleteButton({
             className="button"
             onClick={(event) => motion.close(event.detail > 0)}
           >
-            {t("Keep {kind}", { kind: t(kind) })}
+            {t("Keep {kind}", {
+              kind: t(kind === "group" ? "collection" : kind),
+            })}
           </button>
           <button
             className="button danger"
@@ -125,7 +129,11 @@ export function DeleteButton({
               })
             }
           >
-            {pending ? t("Deleting…") : t("Delete {name}", { name: t(kind) })}
+            {pending
+              ? t("Deleting…")
+              : t("Delete {name}", {
+                  name: t(kind === "group" ? "collection" : kind),
+                })}
           </button>
         </div>
       </dialog>

@@ -24,7 +24,7 @@ export function Sidebar({ models }: { models: Model[] }) {
         href="/groups"
       >
         <Layers size={19} />
-        {t("Groups")}
+        {t("Collections")}
       </Link>
       <div className="nav-label">
         {t("Models")}

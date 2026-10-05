@@ -1,7 +1,7 @@
 "use client";
 import { useLocale, useTranslations } from "@/components/preferences";
 import { translateFeedback } from "@/lib/i18n";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   savePrompt,
@@ -10,6 +10,7 @@ import {
   login,
   setupAdmin,
 } from "@/lib/actions";
+import { MembershipPicker } from "./membership-picker";
 import { TagInput } from "@/components/tag-input";
 import type { Model, Group, Prompt } from "@/lib/data";
 import { promptDetailPath } from "@/lib/prompt-navigation";
@@ -112,24 +113,26 @@ export function PromptForm({
         </label>
       </div>
       <fieldset className="form-section">
-        <legend>{t("Groups")}</legend>
+        <legend>{t("Collections")}</legend>
+        <p className="muted">
+          {t("A prompt can belong to several collections.")}
+        </p>
         {groups.length ? (
-          <div className="checkbox-grid">
-            {groups.map((g) => (
-              <label className="check-label" key={g.id}>
-                <input
-                  type="checkbox"
-                  name="groups"
-                  value={g.id}
-                  defaultChecked={selectedGroups.includes(g.id)}
-                />
-                {g.name}
-              </label>
-            ))}
-          </div>
+          <MembershipPicker
+            name="groups"
+            items={groups.map((g) => ({
+              id: g.id,
+              title: g.name,
+              searchText: g.description,
+            }))}
+            selected={selectedGroups}
+            limit={100}
+          />
         ) : (
           <p className="muted">
-            {t("Create groups to collect related prompts.")}
+            {t(
+              "Create a collection for a character, backgrounds, or a project.",
+            )}
           </p>
         )}
       </fieldset>
@@ -205,18 +208,62 @@ export function GroupForm({
 }) {
   const t = useTranslations();
   const [state, action, pending] = useActionState(saveGroup, {});
+  const [name, setName] = useState(group?.name ?? "");
+  const [description, setDescription] = useState(group?.description ?? "");
   return (
     <form action={action} className="editor-form">
       <input type="hidden" name="id" value={group?.id || ""} />
+      {!group && (
+        <div className="collection-starters">
+          <p className="muted">{t("Start with an idea")}</p>
+          <div className="collection-starter-grid">
+            {(
+              [
+                [
+                  "Character",
+                  "Luna the explorer",
+                  "One character, many expressions and outfits.",
+                ],
+                [
+                  "Backgrounds",
+                  "Backgrounds",
+                  "Scenes and environments for your next creation.",
+                ],
+                [
+                  "Project",
+                  "Storybook project",
+                  "Everything for a story, series, or shared style.",
+                ],
+              ] as const
+            ).map(([label, example, detail]) => (
+              <button
+                type="button"
+                className="collection-starter"
+                key={label}
+                onClick={() => {
+                  setName(t(example));
+                  setDescription(t(detail));
+                }}
+              >
+                <strong>{t(label)}</strong>
+                <span>{t(detail)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="form-section">
         <label>
-          {t("Group name")}
+          {t("Collection name")}
           <input
             name="name"
             required
             maxLength={160}
-            defaultValue={group?.name}
-            placeholder={t("e.g. Soft summer light")}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t(
+              "e.g. Luna the explorer, Backgrounds, Storybook project",
+            )}
             autoFocus
           />
         </label>
@@ -226,40 +273,32 @@ export function GroupForm({
             name="description"
             maxLength={5000}
             rows={3}
-            defaultValue={group?.description}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder={t("What brings these ideas together?")}
           />
         </label>
       </div>
       <fieldset className="form-section">
-        <legend>{t("Prompts in this group")}</legend>
+        <legend>{t("Prompts in this collection")}</legend>
         <p className="muted">
           {t("Collect full prompts and pieces from any model.")}
         </p>
-        <div className="membership-list">
-          {prompts.map((p) => (
-            <label className="check-label" key={p.id}>
-              <input
-                type="checkbox"
-                name="prompts"
-                value={p.id}
-                defaultChecked={selected.includes(p.id)}
-              />
-              <span>
-                {p.title}
-                <small>{p.model_name}</small>
-              </span>
-            </label>
-          ))}
-          {!prompts.length && (
-            <p className="muted">
-              {t("No prompts yet. You can add them later.")}
-            </p>
-          )}
-        </div>
+        <MembershipPicker
+          name="prompts"
+          items={prompts.map((p) => ({
+            id: p.id,
+            title: p.title,
+            detail: p.model_name,
+          }))}
+          selected={selected}
+          limit={1000}
+        />
       </fieldset>
       <p className="form-note">
-        {t("Add this group’s own preview images after saving.")}
+        {t(
+          "Your collection cover comes from its prompts. You can also add a custom cover.",
+        )}
       </p>
       <Feedback error={state.error} />
       <div className="form-actions">
@@ -270,7 +309,7 @@ export function GroupForm({
           {t("Cancel")}
         </Link>
         <button className="button primary" disabled={pending}>
-          {pending ? t("Saving…") : t("Save group")}
+          {pending ? t("Saving…") : t("Save collection")}
         </button>
       </div>
     </form>
